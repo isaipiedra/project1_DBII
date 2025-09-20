@@ -1,0 +1,16 @@
+{
+  "name": "set-sharing-site",
+  "version": "1.0.0",
+  "description": "First programmed project for Databases II. Group 2. An app to share data.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
