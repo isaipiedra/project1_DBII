@@ -1,4 +1,414 @@
+/* GENERAL */
 * {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 18px;
+    color: #FFFFFF;
 }
+
+/* BODY */
+.desktop_body{
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: row;
+    height: 100vh;
+    width: 100%;
+}
+
+/* --------- USER NOTIFICATIONS | LEFT BAR --------- */
+.user_notification{
+    padding: 2em;
+    background-color: #31323F;
+    display: flex;
+    flex-direction: column;
+    display: none;
+}
+
+#side_notification_header{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#side_notification_header h1{
+    font-size: 30px;
+}
+
+/* NOTIFICATION LIST */
+#notification_list ul{
+    list-style: none;
+    padding: 0;
+}
+
+#notification_list ul li{
+    border-top: solid 2px #ACAED8;
+    border-bottom: solid 2px #ACAED8;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    cursor: pointer;
+}
+
+#notification_list ul li:hover {
+    background-color: #4A4B5D;
+    transition: ease 0.2s;
+}
+
+#notification_list ul li img {
+    margin-right: 0.25em;
+}
+
+#notification_list ul li i {
+    margin-right: 0.25em;
+}
+
+#notification_iteminfo{
+    display: flex;
+    flex-direction: column;
+    width: 12em;
+}
+
+#notification_item_header{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+#notification_item_header h5 {
+    margin: 0.5em 0;
+    padding-right: 1em;
+}
+
+#notification_iteminfo p {
+    margin: 0 0 0.5em 0;
+}
+
+/* --------- USER INFO | LEFT BAR --------- */
+.tooltip_right {
+    width: 100%;
+    display: flex;
+    align-items: end;
+    justify-content: end;
+}
+
+.tooltip_right i {
+    color:#1e1f28; 
+    font-size: 60px; 
+    font-weight:bolder;
+    cursor: pointer;
+}
+
+.tooltip_right i:hover {
+    color:#FFFFFF; 
+    transition: ease 0.2s;
+}
+
+/* USERS INFO */
+.user_info{
+    padding: 2em;
+    background-color: #31323F;
+    display: flex;
+    flex-direction: column;
+}
+
+#username_and_image {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+/* OPTIONS PANEL */
+#options_panel{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    margin: 2em 0;
+}
+
+#options_panel i {
+    color: #FFFFFF;
+    font-size: 30px;
+    cursor: pointer;
+}
+
+#options_panel i:hover {
+    color: #1E1F28;
+    transition: ease 0.2s;
+}
+
+/* REPOSITORY LIST */
+#repository_list h2{
+    justify-self: center;
+}
+
+#repository_list ul{
+    list-style: none;
+    padding: 0;
+    overflow-y: auto;
+}
+
+#repository_list ul li{
+    border-bottom: solid 2px #ACAED8;
+    width: 12em;
+    padding: 0.5em 0.5em;
+    margin-bottom: 1em;
+    cursor: pointer;
+}
+
+#repository_list ul li:hover {
+    background-color: #4A4B5D;
+    transition: ease 0.2s;
+}
+
+
+/* --------- POST FEED | MAIN SECTION --------- */
+.main_section{
+    background-color: #4A4B5D;
+    flex-grow: 4;
+}
+
+/* SEARCH BAR */
+#search_tool{
+    background-color: #1E1F28;
+    padding: 2em 5em;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#search_bar_section {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 30em;
+}
+
+#search_bar_section input {
+    border: none;
+    border-radius: 20px;
+    width: 80%;
+    font-size: 20px;
+    height: 1.75em;
+    color: #1E1F28;
+    padding: 0 1em;
+    margin-right: 2em;
+}
+
+#search_bar_section input:focus {
+    outline: none;
+}
+
+#search_bar_section i {
+    color:#CACDFF;
+    font-weight: 900;
+    font-size: 40px;
+    cursor: pointer;
+}
+
+#search_bar_section i:hover {
+    color:#FFFFFF;
+    transition: ease 0.2s;
+}
+
+#user_info_menu {
+    display: flex;
+    flex-direction: row;
+    visibility: hidden;
+    align-items: center;
+}
+
+#menu_opener {
+    color: #FFFFFF;
+    font-size: 50px;
+    font-weight: 900;
+    cursor: pointer;
+    margin-right: 0.5em;
+}
+
+#notification_opener {
+    color: #FFFFFF;
+    font-size: 40px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+#user_inbox_menu {
+    visibility: hidden;
+}
+
+#user_inbox_menu i {
+    color: #FFFFFF;
+    font-size: 40px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+
+/* POST FEED | BELOW THE SEARCH BAR */
+#main_post_feed{
+    overflow-y: auto;
+    padding: 2em 3em;
+}
+
+/* INDIVIDUAL POSTS */
+.post{
+    background-color: #31323F;
+}
+
+.post_header{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 0 2em;
+}
+
+.post_header_userinfo{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.post_header_userinfo img {
+    margin-right: 0.5em;
+}
+
+.post_header_userinfo i {
+    margin-right: 0.5em;
+}
+
+.post_header_postinfo{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.post_header_postinfo h5 {
+    margin-right: 1em;
+}
+
+.post_description {
+    padding: 0 3em;
+}
+
+.post_description h3 {
+    margin: 0;
+}
+
+.post_description p {
+    text-align: justify;
+}
+
+.post_seemore {
+    margin-top: 2em;
+    width: 100%;
+}
+
+.post_seemore button{
+    width: 100%;
+    background-color: #1E1F28;
+    outline: none;
+    border: none;
+    padding: 0.5em 0;
+    cursor: pointer;
+}
+
+.post_seemore button:hover{
+    background-color: #13141a;
+    transition: ease-in-out 0.2s;
+}
+
+
+/* --------- SIDE INBOX | RIGHT BAR --------- */
+.tooltip_left {
+    display: flex;
+    align-items: start;
+}
+
+.tooltip_left i {
+    color:#1e1f28; 
+    font-size: 60px; 
+    font-weight:bolder;
+    cursor: pointer;
+}
+
+.tooltip_left i:hover {
+    color:#FFFFFF; 
+    transition: ease 0.2s;
+}
+
+.side_inbox{
+    padding: 2em;
+    background-color: #31323F;
+    display: flex;
+    flex-direction: column;
+}
+
+#side_inbox_header{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#side_inbox_header h1{
+    font-size: 30px;
+}
+
+/* INBOX LIST */
+#inbox_list ul{
+    list-style: none;
+    padding: 0;
+}
+
+#inbox_list ul li{
+    border-top: solid 2px #ACAED8;
+    border-bottom: solid 2px #ACAED8;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    cursor: pointer;
+}
+
+#inbox_list ul li:hover {
+    background-color: #4A4B5D;
+    transition: ease 0.2s;
+}
+
+#inbox_list ul li img {
+    margin-right: 0.25em;
+}
+
+#inbox_list ul li i {
+    margin-right: 0.25em;
+}
+
+#inbox_iteminfo{
+    display: flex;
+    flex-direction: column;
+    width: 12em;
+}
+
+#inbox_item_header{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+#inbox_item_header h5 {
+    margin: 0.5em 0;
+    padding-right: 1em;
+}
+
+.circle_notification {
+    width: 0.5em;
+    height: 0.5em;
+    background-color: #ACAED8;
+    border-radius: 100%;
+}
+
+#inbox_iteminfo p {
+    margin: 0 0 0.5em 0;
+}
+
+/* --------- SIDE INBOX | RIGHT BAR --------- */
