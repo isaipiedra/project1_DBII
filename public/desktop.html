@@ -14,7 +14,7 @@
         </div>
 
         <div id="username_and_image">
-            <i class='bx bxs-user-circle' style='color:#ffffff; font-size: 60px;'></i>
+            <i class='bx bxs-user-circle' style='font-size: 60px;'></i>
             <p>My username</p>
         </div>
 
@@ -28,14 +28,14 @@
         <div id="repository_list">
             <h2>Repositories</h2>
             <ul>
-                <li>Repository 1</li>
-                <li>Repository 1</li>
-                <li>Repository 1</li>
+                <li class="repository_item"><a href="">Repository 1</a></li>
+                <li class="repository_item"><a href="">Repository 2</a></li>
+                <li class="repository_item"><a href="">Repository 3</a></li>                
             </ul>
         </div>
     </nav>
 
-    <nav class="user_notification" id="user_notification">
+    <nav class="user_notifications" id="user_notifications">
         <div class="tooltip_right" id="tooltip_right_notification">
             <i class='bx bx-chevron-left'></i>
         </div>
@@ -46,7 +46,7 @@
 
         <div id="notification_list">
             <ul>
-                <li>
+                <li class="notification">
                     <i class='bx bxs-user-circle' style='color:#ffffff; font-size: 50px;'></i>
                     <div id="notification_iteminfo">
                         <div id="notification_item_header">
@@ -55,7 +55,7 @@
                         </div>                        
                         <p>just made a post</p>
                     </div>
-                </li>
+                </li>                               
             </ul>
         </div>
     </nav>
@@ -94,9 +94,11 @@
                     <p>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Ratione magni expedita dolores neque assumenda sit iusto dicta tenetur id officia.</p>
                 </div>
                 <div class="post_seemore">
-                    <button class="seemore_btn">
-                        See more
-                    </button>
+                    <a href="repository_info.html">
+                        <button class="seemore_btn">
+                            See more
+                        </button>
+                    </a>                    
                 </div>
             </div>
         </div>
@@ -112,8 +114,8 @@
         </div>
 
         <div id="inbox_list">
-            <ul>
-                <li>
+            <ul> 
+                <li class="inbox_notification">
                     <i class='bx bxs-user-circle' style='color:#ffffff; font-size: 50px;'></i>
                     <div id="inbox_iteminfo">
                         <div id="inbox_item_header">
@@ -127,5 +129,5 @@
         </div>
     </aside>
 </body>
-<script src="scripts/front-scripts.js"></script>
+<script src="scripts/desktop-scripts.js"></script>
 </html>

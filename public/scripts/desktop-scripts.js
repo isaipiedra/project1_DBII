@@ -11,7 +11,7 @@ const notification_opener = document.querySelector('#notification_opener');
 const user_inbox_menu = document.querySelector('#user_inbox_menu');
 
 const user_info = document.querySelector('#user_info');
-const user_notification = document.querySelector('#user_notification');
+const user_notification = document.querySelector('#user_notifications');
 const side_inbox = document.querySelector('#side_inbox');
 
 /* Events for the icons to show and hide the content */
