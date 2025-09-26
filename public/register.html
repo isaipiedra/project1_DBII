@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - CodeCollab</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="register-card">
+            <div class="card-header">
+                <h1><i class='bx bx-user-plus'></i> Create Account</h1>
+            </div>
+            
+            <form id="registerForm" class="register-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstName">First Name</label>
+                        <input type="text" id="firstName" name="firstName" required>
+                        <span class="error-message" id="firstNameError"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="lastName">Last Name</label>
+                        <input type="text" id="lastName" name="lastName" required>
+                        <span class="error-message" id="lastNameError"></span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="dateOfBirth">Date of Birth</label>
+                    <input type="date" id="dateOfBirth" name="dateOfBirth" required>
+                    <span class="error-message" id="dobError"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required>
+                    <span class="error-message" id="usernameError"></span>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required>
+                        <span class="error-message" id="passwordError"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" required>
+                        <span class="error-message" id="confirmPasswordError"></span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="file-label">Profile Picture</label>
+                    <div class="file-upload-area" id="fileUploadArea">
+                        <i class='bx bx-cloud-upload'></i>
+                        <p>Click to upload or drag and drop</p>
+                        <p class="file-types">PNG or JPG</p>
+                        <input type="file" id="profilePicture" name="profilePicture" accept="image/*">
+                    </div>
+                    <div class="file-preview" id="filePreview"></div>
+                    <span class="error-message" id="fileError"></span>
+                </div>
+                
+                <div class="form-actions">
+                    <a href="index.html" class="btn btn-secondary">
+                        <i class='bx bx-arrow-back'></i> Back to Login
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class='bx bx-user-plus'></i> Create Account
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="scripts/resgister-script.js"></script>
+</body>
+</html>

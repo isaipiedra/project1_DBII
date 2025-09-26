@@ -42,6 +42,39 @@ body {
     width: 100%;
 }
 
+/* ------------------ SCROLL BAR ------------------*/
+
+::-webkit-scrollbar {
+  width: 50px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ffffff;
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #e0e0e0;
+}
+
+::-webkit-scrollbar-button {
+    width: 0;
+    height: 0;
+    display: none;
+}
+
+/* Firefox support */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #ffffff transparent;
+}
+
 /* ----------------------- ------- ----------------------- */
 
 
@@ -774,3 +807,417 @@ body {
 }
 
 /* --------------------- ---------- ---------------------- */
+/* ----------------------- REGISTER FORM ----------------------- */
+.container {
+    width: 100%;
+    max-width: 800px;
+    margin: 100px auto;
+}
+
+.register-card {
+    background-color: var(--secondary-background);
+    border-radius: 8px;
+    padding: 2.5em;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.card-header {
+    text-align: center;
+    margin-bottom: 2em;
+    border-bottom: 1px solid var(--lighter-purple);
+    padding-bottom: 1.5em;
+}
+
+.card-header h1 {
+    font-size: 32px;
+    margin: 0 0 0.5em 0;
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+}
+
+.card-header h1 i {
+    font-size: 32px;
+    color: var(--light-purple);
+}
+
+.card-header p {
+    color: var(--light-purple);
+    margin: 0;
+    font-size: 18px;
+}
+
+.register-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5em;
+    margin-bottom: 1.5em;
+}
+
+.form-group {
+    flex: 1;
+    min-width: 250px;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1.5em;
+}
+
+.form-group label {
+    margin-bottom: 0.5em;
+    font-weight: 500;
+    color: var(--light-purple);
+}
+
+.form-group input {
+    background-color: var(--light-gray);
+    border: none;
+    border-radius: 4px;
+    padding: 0.75em 1em;
+    color: var(--input-text);
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: 2px solid var(--light-purple);
+    background-color: var(--white);
+}
+
+.file-label {
+    margin-bottom: 0.5em;
+    font-weight: 500;
+    color: var(--light-purple);
+}
+
+.file-upload-area {
+    border: 2px dashed var(--lighter-purple);
+    border-radius: 4px;
+    padding: 1.5em;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.file-upload-area:hover {
+    background-color: var(--hover-light-gray);
+    border-color: var(--light-purple);
+}
+
+.file-upload-area.highlight {
+    background-color: var(--hover-light-gray);
+    border-color: var(--light-purple);
+    transform: scale(1.02);
+    transition: all 0.2s ease;
+}
+
+.file-upload-area i {
+    font-size: 40px;
+    color: var(--lighter-purple);
+    margin-bottom: 0.5em;
+}
+
+.file-upload-area p {
+    margin: 0.25em 0;
+    color: var(--light-purple);
+}
+
+.file-types {
+    font-size: 14px;
+    color: var(--lighter-purple) !important;
+}
+
+.file-upload-area input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.file-upload-area.has-file {
+    border-color: var(--light-purple);
+    background-color: rgba(202, 205, 255, 0.1);
+}
+
+.file-preview {
+    margin-top: 1em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    display: none;
+}
+
+.file-preview img {
+    max-width: 120px;
+    max-height: 120px;
+    border-radius: 4px;
+    object-fit: cover;
+    border: 2px solid var(--light-purple);
+}
+
+.file-preview.active {
+    display: flex;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5em;
+    flex-wrap: wrap;
+    gap: 1em;
+}
+
+.btn {
+    padding: 0.75em 1.5em;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background-color: var(--dark-button);
+    color: var(--white);
+}
+
+.btn-primary:hover {
+    background-color: var(--hover-dark-button);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: var(--light-purple);
+    text-decoration: underline;
+}
+
+.btn-secondary:hover {
+    color: var(--white);
+}
+
+.error-message {
+    color: #ff6b6b;
+    font-size: 14px;
+    margin-top: 0.25em;
+    min-height: 20px;
+}
+
+.form-group.error input {
+    outline: 2px solid #ff6b6b;
+}
+
+.form-group.error .file-upload-area {
+    border-color: #ff6b6b;
+}
+
+.success-message {
+    background-color: var(--download-button);
+    color: var(--white);
+    padding: 1em;
+    border-radius: 4px;
+    margin-top: 1em;
+    text-align: center;
+    display: none;
+}
+
+.success-message.active {
+    display: block;
+}
+
+/* ----------------------- RESPONSIVE ----------------------- */
+@media (max-width: 768px) {
+    .container {
+        padding: 1em;
+    }
+    
+    .register-card {
+        padding: 1.5em;
+    }
+    
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .form-group {
+        min-width: 100%;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        gap: 1em;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .card-header h1 {
+        font-size: 28px;
+    }
+}
+
+/* ----------------------- LOGIN PAGE ----------------------- */
+.login-body {
+    background: linear-gradient(135deg, var(--primary-background) 0%, var(--tertiary-background) 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 450px;
+}
+
+.login-card {
+    background-color: var(--secondary-background);
+    border-radius: 12px;
+    padding: 2.5em;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5em;
+    flex-wrap: wrap;
+    gap: 1em;
+}
+
+.forgot-password, .create-account {
+    color: var(--light-purple);
+    text-decoration: none;
+    font-size: 0.9em;
+    transition: color 0.2s ease;
+}
+
+.forgot-password:hover, .create-account:hover {
+    color: var(--white);
+    text-decoration: underline;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 1.5em;
+}
+
+.btn {
+    padding: 0.75em 1.5em;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    text-decoration: none;
+    width: 100%;
+    justify-content: center;
+}
+
+.btn-primary {
+    background-color: var(--dark-button);
+    color: var(--white);
+}
+
+.btn-primary:hover {
+    background-color: var(--hover-dark-button);
+    transform: translateY(-2px);
+}
+
+.error-message {
+    color: #ff6b6b;
+    font-size: 14px;
+    margin-top: 0.25em;
+    min-height: 20px;
+    display: none;
+}
+
+.success-message {
+    background-color: var(--download-button);
+    color: var(--white);
+    padding: 1em;
+    border-radius: 4px;
+    margin-top: 1em;
+    text-align: center;
+    display: none;
+}
+
+.success-message.active {
+    display: block;
+}
+
+/* ----------------------- RESPONSIVE LOGIN ----------------------- */
+@media (max-width: 768px) {
+    .login-card {
+        padding: 1.5em;
+    }
+    
+    .form-options {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1em;
+    }
+    
+    .forgot-password, .create-account {
+        align-self: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .login-body {
+        padding: 0.5em;
+    }
+    
+    .login-card {
+        padding: 1em;
+    }
+    
+    .card-header h1 {
+        font-size: 24px;
+    }
+    
+    .form-options {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5em;
+    }
+    
+    .forgot-password, .create-account {
+        align-self: center;
+    }
+}
