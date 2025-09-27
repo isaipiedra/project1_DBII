@@ -20,10 +20,10 @@
         </div>
 
         <div id="options_panel">
-            <i class='bx bxs-cog'></i>
-            <i class='bx bxs-plus-circle'></i>
-            <i class='bx bxs-copy'></i>
-            <a href="index.html"><i class='bx bx-log-out-circle'></i></a>                     
+            <i class='bx bxs-cog' title="Profile settings" id="setting_option"></i>
+            <a href="new_repository.html"><i class='bx bxs-plus-circle' title="Create a new repository" id="create_new_option"></i></a>
+            <i class='bx bxs-copy' title="Copy a repository" id="copy_option"></i>
+            <a href="login.html"><i class='bx bx-log-out-circle' title="Logout"></i></a>                     
         </div>
 
         <div id="repository_list">
@@ -47,8 +47,8 @@
                 <i class='bx bx-search'></i>
             </div>            
 
-            <div id="user_chat_menu">
-                <i class='bx bxs-chat' id="chat_opener"></i>
+            <div id="user_inbox_menu">
+                <i class='bx bxs-chat'></i>
             </div>
         </header>
 
@@ -73,7 +73,7 @@
             </div>
         </div>
 
-        <main id="main_info">
+        <div id="main_info">
             <article id="repository_info_left">
                 <section id="repository_info_description">
                     <p>
@@ -176,8 +176,81 @@
                     <i class='bx bxs-send' ></i>
                 </div>
             </aside>
-        </main>
+        </div>
     </main>
+
+    <aside class="side_inbox" id="side_inbox">
+        <div class="tooltip_left" id="tooltip_left">
+            <i class='bx bx-chevron-right'></i>
+        </div>
+
+        <div id="side_inbox_header">
+            <h1>Inbox</h1>
+        </div>
+
+        <div id="inbox_list">
+            <ul> 
+                <li class="inbox_notification">
+                    <i class='bx bxs-user-circle' style='color:#ffffff; font-size: 50px;'></i>
+                    <div id="inbox_iteminfo">
+                        <div id="inbox_item_header">
+                            <h5>username1</h5>
+                            <div class="circle_notification"></div>
+                        </div>                        
+                        <p>this is a place holder</p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </aside>
+
+    <!-- ONLY FOR MESSAGES -->
+    <div class="message_container">
+        <div class="message_box">
+            <div class="close_message_box">
+                <button id="close_message_btn"><i class="bx bx-x"></i></button>
+            </div>
+
+            <div class="title_message_box">
+                <h1>Clone</h1>
+            </div>
+
+            <div class="content_message_box">
+                <!-- EXAMPLE FOR MESSAGES WITH A PARAGRAPH (JUST ADD AS MANY P AS NEEDED) -->
+                <!-- <p> Lorem ipsum.</p> -->
+                
+                <!-- EXAMPLE FOR MESSAGES WITH LISTS, THE FIRST LI IS FOR HISTORY AND THE SECOND FOR CLONE -->
+                <!--     
+                    <ul>
+                        <li>
+                            <div>
+                                <i class="bx bxs-user-circle"></i>
+                                <p>user</p>
+                            </div>
+                            <div>
+                                12/7/2202
+                            </div>
+                        </li>
+                        <li>
+                            <p>repository 1</p>
+                        </li>
+                    </ul>
+                 -->
+                
+                <!-- EXAMPLE FOR MESSAGES WITH INPUTS (ADD AS MANY LABELS/INPUTS AS NEEDED) -->
+                <!-- 
+                    <label for="">LABEL</label>
+                    <input type="password" name="" id=""> 
+                -->
+            </div>
+
+            <div class="btns_message_box">
+                <button id="btn_message_primary">Click me</button>
+            </div>               
+        </div>
+        <div class="overlay"></div>
+    </div>
 </body>
+<script src="scripts/general-scripts.js"></script>
 <script src="scripts/repository-info-scripts.js"></script>
 </html>
