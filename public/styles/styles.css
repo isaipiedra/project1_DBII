@@ -21,10 +21,16 @@
 
     --dark-button: #1E1F28;
     --hover-dark-button: #13141A;
+
     --primary-button: #ACAED8;
     --hover-primary-button: #8487BC;
+
+    --secondary-button: #FFFFFF;
+    --hover-secondary-button: #E2E2E2;
+
     --delete-button: #91231B;
-    --hover-delete-button: #7B1E17;    
+    --hover-delete-button: #7B1E17;  
+
     --download-button: #1B912D;
     --hover-download-button: #197928;
 }
@@ -934,7 +940,7 @@ html {
     align-items: center;
 }
 
-#user_background img, #user_background i, #user_background input {
+#user_background img, #user_background i, #user_background input, #user_background h1 {
     margin-right: 1em;
     font-size: 60px;
 }
@@ -976,7 +982,7 @@ html {
     min-height: 0;
 }
 
-.user_repositories, .user_personal_info, .user_followers  {
+.user_repositories, .user_personal_info, .user_personal_summary, .user_followers  {
     background-color: var(--secondary-background);
     font-size: 20px;
     display: flex;
@@ -985,7 +991,7 @@ html {
     width: 15%;
 }
 
-.user_personal_info {
+.user_personal_info, .user_personal_summary{
     width: 30%;
 }
 
@@ -1087,6 +1093,41 @@ html {
 
 .user_followers ul li img {
     margin-right: 0.5em;
+}
+
+/* ---- SPECIFIC CHANGES FOR USERS PROFILE ---- */
+#user_summary ul {
+    padding: 0;
+    list-style: none;
+}
+
+#user_summary ul li {
+    border-bottom: 2px solid var(--light-purple);
+    padding-bottom: 1em;
+    margin-bottom: 2em;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+#user_summary ul li h1 {
+    margin-right: 0.5em;
+}
+
+#follow_user_btn {
+    font-size: 30px;
+    padding: 0.10em 2em;
+    border: none;
+    border-radius: 3px;
+    background-color: var(--secondary-button);
+    color: var(--input-text);
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#follow_user_btn:hover {
+    background-color: var(--hover-secondary-button);
+    transition: 0.2s ease;
 }
 
 /* ----------------------- ------- ----------------------- */
