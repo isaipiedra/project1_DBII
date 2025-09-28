@@ -1,6 +1,13 @@
-data/
-.env
-*.log
 node_modules/
+
+# Datos de bases de datos
+Databases/mongo/data/
+Databases/redis/data/
+
+# Archivos de entorno local
+.env
+
+# Logs y archivos temporales
+*.log
 .DS_Store
 Thumbs.db
