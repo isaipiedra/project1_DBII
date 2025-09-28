@@ -1,7 +1,6 @@
 const cassandra = require('cassandra-driver');
-const assert = require('assert'); // Faltaba importar assert
+const assert = require('assert'); 
 
-// Configuración del cliente Cassandra
 const client = new cassandra.Client({
     contactPoints: ['127.0.0.1'], 
     localDataCenter: 'datacenter1',
