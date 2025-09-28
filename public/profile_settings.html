@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create new repository</title>
+    <title>Profile settings</title>
     <link rel="stylesheet" href="styles/styles.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="shortcut icon" href="imgs/code-alt-regular-240.ico" type="image/x-icon">
 </head>
-<body class="new_repository_body">
-
+<body class="profiles_body">
     <nav class="user_info" id="user_info">
         <div class="tooltip_right" id="tooltip_right">
             <i class='bx bx-chevron-left'></i>
@@ -32,12 +31,12 @@
             <ul>
                 <li class="repository_item"><a href="">Repository 1</a></li>
                 <li class="repository_item"><a href="">Repository 2</a></li>
-                <li class="repository_item"><a href="">Repository 3</a></li>                
+                <li class="repository_item"><a href="">Repository 3</a></li>            
             </ul>
         </div>
     </nav>
 
-    <main id="repository_main">
+    <main id="profile_main">
         <header class="pages_header" id="search_tool">
             <div id="user_info_menu">
                 <i class='bx bx-menu' id="menu_opener"></i>
@@ -53,65 +52,65 @@
             </div>
         </header>
 
-        <section id="repository_image">
+        <section id="user_background">
             <div>
-                <a href="desktop.html"><i class='bx bx-chevron-left' id="user_back_arrow"></i></a>              
-            </div>        
-            <h1><input type="text" value="Repository name" id="repo_name" disabled><i class="bx bxs-pencil" id="edit_repo_name"></i></h1>
+                <a href="desktop.html"><i class='bx bx-chevron-left' id="user_back_arrow"></i></a>
+            </div>
+            <i class="bx bxs-user-circle"></i>
+            <input type="text" value="User name" id="user_name" disabled>
+            <i class="bx bxs-pencil" id="edit_user_name"></i>
         </section>
 
-        <div id="repository_details">
-            <p>Owner: My username</p>
-            <p>Archivos: 3</p>
-        </div>
-
-        <div id="main_info">
-            <article id="repository_info_left">
-                <section id="repository_info_description">
-                    <label for="repo_description">Description</label>
-                    <textarea name="repo_description" id="repo_description" placeholder="Description of your repository"></textarea>           
-                </section>
-                <section id="repository_action_btns">
-                    <div class="right_btns">
-                        
-                    </div>
-                    <div class="left_btns">
-                        <button class="play_btn">Upload guide</button>
-                        <button class="download_btn">Upload files</button>
-                    </div>
-                </section>
-                <section id="repository_files">
-                    <ul id="repository_file_list">
-                        <li class="repository_file_item">
-                            <p>File name 1</p>
-                            <div class="file_item_details">
-                                <p>23k</p>
-                            </div>
+        <div class="main_profile">
+            <article class="user_repositories">
+                <h1>Repositories</h1>
+                <div id="user_repository_list">
+                    <ul>
+                        <li>
+                            Repository 1
                         </li>
-                        <li class="repository_file_item">
-                            <p>File name 2</p>
-                            <div class="file_item_details">
-                                <p>23k</p>
-                            </div>
+                        <li>
+                            Repository 1
                         </li>
-                        <li class="repository_file_item">
-                            <p>File name 3</p>
-                            <div class="file_item_details">
-                                <p>23k</p>
-                            </div>
+                        <li>
+                            Repository 1
                         </li>
-                    </ul>
-                </section>
+                        </ul>
+                </div>                
             </article>
 
-            <aside id="repository_submition_right">
-                <div id="submition_message_space">
-                    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Odio, beatae cumque! Illo molestias tenetur dolorem qui odit quam ullam ipsum.</p>                    
+            <article class="user_personal_info">
+                <div id="user_information">
+                    <label for="user_name">Name:</label>
+                    <input type="text" name="user_name" id="user_name" placeholder="First name">
+                    <label for="user_name">Middle name:</label>
+                    <input type="text" name="user_name" id="user_name" placeholder="Middle name">
+                    <label for="user_name">Last name:</label>
+                    <input type="text" name="user_name" id="user_name" placeholder="Last name">
+                    <label for="user_name">Birth date:</label>
+                    <input type="date" name="user_name" id="user_name" placeholder="Last name">
                 </div>
-                <div id="submition_btn_space">
-                    <button id="submit_repo_btn">Submit</button>
+                <div id="user_info_btns">
+                    <button id="change_password_btn"><i class="bx bxs-key"></i> Change password</button>
+                    <button id="save_changes_btn">Save changes</button>
                 </div>
-            </aside>
+            </article>
+
+            <article class="user_followers">
+                <h1>Followers</h1>
+                <div id="user_followers_list">
+                    <ul>
+                        <li>
+                            <i class="bx bxs-user-circle"></i>
+                            <p>User name</p>
+                        </li>
+                        <li>
+                            <i class="bx bxs-user-circle"></i>
+                            <p>User name</p>
+                        </li>                        
+                    </ul>
+                </div>                
+            </article>
         </div>
     </main>
 
@@ -188,5 +187,5 @@
     </div>
 </body>
 <script src="scripts/general-scripts.js"></script>
-<script src="scripts/new-repository-scripts.js"></script>
+<script src="scripts/profile-settings-scripts.js"></script>
 </html>
