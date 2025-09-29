@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Desktop</title>
+    <title>Chat</title>
     <link rel="stylesheet" href="styles/styles.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="shortcut icon" href="imgs/code-alt-regular-240.ico" type="image/x-icon">
 </head>
-<body class="desktop_body">
+<body class="profiles_body">
     <nav class="user_info" id="user_info">
         <div class="tooltip_right" id="tooltip_right">
             <i class='bx bx-chevron-left'></i>
@@ -31,41 +31,15 @@
             <ul>
                 <li class="repository_item"><a href="">Repository 1</a></li>
                 <li class="repository_item"><a href="">Repository 2</a></li>
-                <li class="repository_item"><a href="">Repository 3</a></li>         
+                <li class="repository_item"><a href="">Repository 3</a></li>            
             </ul>
         </div>
     </nav>
 
-    <nav class="user_notifications" id="user_notifications">
-        <div class="tooltip_right" id="tooltip_right_notification">
-            <i class='bx bx-chevron-left'></i>
-        </div>
-
-        <div id="side_notification_header">
-            <h1>Notifications</h1>
-        </div>
-
-        <div id="notification_list">
-            <ul>
-                <li class="notification">
-                    <i class='bx bxs-user-circle' style='color:#ffffff; font-size: 50px;'></i>
-                    <div id="notification_iteminfo">
-                        <div id="notification_item_header">
-                            <h5>username1</h5>
-                            <div class="circle_notification"></div>
-                        </div>                        
-                        <p>just made a post</p>
-                    </div>
-                </li>                               
-            </ul>
-        </div>
-    </nav>
-
-    <section class="main_section">
-        <div id="search_tool">
+    <main id="profile_main">
+        <header class="pages_header" id="search_tool">
             <div id="user_info_menu">
                 <i class='bx bx-menu' id="menu_opener"></i>
-                <i class='bx bxs-bell' id="notification_opener"></i>
             </div>
 
             <div id="search_bar_section">
@@ -76,34 +50,56 @@
             <div id="user_inbox_menu">
                 <i class='bx bxs-chat'></i>
             </div>
-        </div>
+        </header>
 
-        <div id="main_post_feed">
-            <div class="post">
-                <div class="post_header">
-                    <div class="post_header_userinfo">
-                        <i class='bx bxs-user-circle' style='color:#ffffff; font-size: 40px;'></i>
-                        <p>A username</p>
-                    </div>
-                    <div class="post_header_postinfo">
-                        <h5>3 files</h5>
-                        <p>12/10/2025</p>
-                    </div>                    
-                </div>
-                <div class="post_description">
-                    <h3>BDII Repository</h3>
-                    <p>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Ratione magni expedita dolores neque assumenda sit iusto dicta tenetur id officia.</p>
-                </div>
-                <div class="post_seemore">
-                    <a href="repository_info.html">
-                        <button class="seemore_btn">
-                            See more
-                        </button>
-                    </a>                    
-                </div>
+        <section id="user_background">
+            <div>
+                <a href="desktop.html"><i class='bx bx-chevron-left' id="user_back_arrow"></i></a>
             </div>
+            <i class="bx bxs-user-circle"></i>
+            <h1>User name</h1>
+        </section>
+
+        <div class="main_chat">
+            <article class="user_chats">
+                <div class="message">
+                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Atque explicabo accusamus illum quas accusantium, perferendis quos culpa praesentium quae libero!</p>
+                </div>  
+                <div class="message">
+                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Atque, qui.</p>
+                </div>    
+                <div class="message">
+                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Atque, qui.</p>
+                </div> 
+                <div class="message">
+                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Atque, qui.</p>
+                </div>        
+                <div class="message">
+                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Atque, qui.</p>
+                </div> 
+                <div class="message">
+                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Atque, qui.</p>
+                </div> 
+                <div class="message">
+                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Atque, qui.</p>
+                </div> 
+                <div class="message">
+                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Atque, qui.</p>
+                </div> 
+                <div class="message">
+                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Atque, qui.</p>
+                </div> 
+                <div class="message">
+                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Atque, qui.</p>
+                </div> 
+            </article>
+
+            <article class="user_message_box">
+                <input type="text" id="new_message_input">
+                <i class="bx bxs-send"></i>
+            </article>            
         </div>
-    </section>
+    </main>
 
     <aside class="side_inbox" id="side_inbox">
         <div class="tooltip_left" id="tooltip_left">
@@ -178,5 +174,5 @@
     </div>
 </body>
 <script src="scripts/general-scripts.js"></script>
-<script src="scripts/desktop-scripts.js"></script>
+<script src="scripts/chat-space-scripts.js"></script>
 </html>

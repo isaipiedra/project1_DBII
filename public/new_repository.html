@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Repository Info</title>
+    <title>Create new repository</title>
     <link rel="stylesheet" href="styles/styles.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="shortcut icon" href="imgs/code-alt-regular-240.ico" type="image/x-icon">
 </head>
-<body class="repository_info_body">
+<body class="new_repository_body">
 
     <nav class="user_info" id="user_info">
         <div class="tooltip_right" id="tooltip_right">
@@ -55,39 +55,29 @@
 
         <section id="repository_image">
             <div>
-                <a href="desktop.html"><i class='bx bx-chevron-left' id="back_arrow"></i></a>              
+                <a href="desktop.html"><i class='bx bx-chevron-left' id="user_back_arrow"></i></a>              
             </div>        
-            <h1>Repository name</h1>
+            <h1><input type="text" value="Repository name" id="repo_name" disabled><i class="bx bxs-pencil" id="edit_repo_name"></i></h1>
         </section>
 
         <div id="repository_details">
             <p>Owner: My username</p>
             <p>Archivos: 3</p>
-            <p>20/11/2025</p>
-            <p><a href="">Downloads</a></p>
-            <div class="stars_count" id="stars_count">
-                <i class='bx bxs-star'></i>
-                <i class='bx bxs-star'></i>
-                <i class='bx bxs-star'></i>
-                <i class='bx bxs-star'></i>
-                <i class='bx bxs-star'></i>
-            </div>
         </div>
 
         <div id="main_info">
             <article id="repository_info_left">
                 <section id="repository_info_description">
-                    <p>
-                        Lorem ipsum dolor sit amet consectetur, adipisicing elit. A nostrum consequuntur optio tempora totam sit iure at commodi. Illum error, alias esse provident quia, recusandae autem, accusamus nisi ab fugit quasi quo voluptas! Adipisci quam molestiae voluptates animi, eum iste praesentium debitis consequuntur voluptatum laboriosam ab impedit ipsam corporis quisquam.
-                    </p>                
+                    <label for="repo_description">Description</label>
+                    <textarea name="repo_description" id="repo_description" placeholder="Description of your repository"></textarea>           
                 </section>
                 <section id="repository_action_btns">
                     <div class="right_btns">
-                        <button class="delete_btn">Delete</button>
+                        
                     </div>
                     <div class="left_btns">
-                        <button class="play_btn">Play guide  <i class='bx bx-play' ></i></button>
-                        <button class="download_btn">Download</button>
+                        <button class="play_btn">Upload guide</button>
+                        <button class="download_btn">Upload files</button>
                     </div>
                 </section>
                 <section id="repository_files">
@@ -96,85 +86,30 @@
                             <p>File name 1</p>
                             <div class="file_item_details">
                                 <p>23k</p>
-                                <i class='bx bxs-download'></i>
                             </div>
                         </li>
                         <li class="repository_file_item">
                             <p>File name 2</p>
                             <div class="file_item_details">
                                 <p>23k</p>
-                                <i class='bx bxs-download'></i>
                             </div>
                         </li>
                         <li class="repository_file_item">
                             <p>File name 3</p>
                             <div class="file_item_details">
                                 <p>23k</p>
-                                <i class='bx bxs-download'></i>
                             </div>
                         </li>
                     </ul>
                 </section>
             </article>
 
-            <aside id="repository_discussion_right">
-                <div id="discussion_space">
-
-                    <div class="discussion_thread"> 
-                        <div class="level_one_discussion" id="discussion_item">
-                            <div id="discussion_item_header">
-                                <div id="discussion_item_header_user">
-                                    <i class='bx bxs-user-circle' ></i>
-                                    <p>username</p>
-                                </div>                    
-                                <i class='bx bx-reply' id="reply_arrow"></i>
-                            </div>
-                            <div id="discussion_item_content">
-                                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Excepturi, magnam placeat libero deleniti eum laudantium itaque doloribus nesciunt ex enim?</p>
-                            </div>
-                            <div id="discussion_item_reply_count">
-                                <p>3 replies <i class='bx bx-chevron-right'></i></p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="discussion_thread">
-                        <div class="level_one_discussion" id="discussion_item">
-                            <div id="discussion_item_header">
-                                <div id="discussion_item_header_user">
-                                    <i class='bx bxs-user-circle' ></i>
-                                    <p>username</p>
-                                </div>                    
-                                <i class='bx bx-reply' id="reply_arrow"></i>
-                            </div>
-                            <div id="discussion_item_content">
-                                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Excepturi, magnam placeat libero deleniti eum laudantium itaque doloribus nesciunt ex enim?</p>
-                            </div>
-                            <div id="discussion_item_reply_count">
-                                
-                            </div>
-                        </div>
-                        <div class="level_two_discussion" id="discussion_item">
-                            <div id="discussion_item_header">
-                                <div id="discussion_item_header_user">
-                                    <i class='bx bxs-user-circle' ></i>
-                                    <p>username</p>
-                                </div>                    
-                                <i class='bx bx-reply' id="reply_arrow"></i>
-                            </div>
-                            <div id="discussion_item_content">
-                                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Excepturi, magnam placeat libero deleniti eum laudantium itaque doloribus nesciunt ex enim?</p>
-                            </div>
-                            <div id="discussion_item_reply_count">
-                                
-                            </div>
-                        </div>
-                    </div>
-                    
+            <aside id="repository_submition_right">
+                <div id="submition_message_space">
+                    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Odio, beatae cumque! Illo molestias tenetur dolorem qui odit quam ullam ipsum.</p>                    
                 </div>
-                <div id="message_space">
-                    <input type="text" name="" id="">
-                    <i class='bx bxs-send' ></i>
+                <div id="submition_btn_space">
+                    <button id="submit_repo_btn">Submit</button>
                 </div>
             </aside>
         </div>
@@ -253,5 +188,5 @@
     </div>
 </body>
 <script src="scripts/general-scripts.js"></script>
-<script src="scripts/repository-info-scripts.js"></script>
+<script src="scripts/new-repository-scripts.js"></script>
 </html>
