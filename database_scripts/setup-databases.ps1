@@ -193,7 +193,7 @@ networks:
 function Create-RedisFiles {
     $redisDir = Join-Path $DatabasesDir "redis"
     
-    # redis.conf
+    # redis.conf - SIN BOM
     $redisConf = @'
 bind 0.0.0.0
 port 6379
@@ -220,9 +220,6 @@ auto-aof-rewrite-min-size 64mb
 maxmemory 512mb
 maxmemory-policy allkeys-lru
 
-# Seguridad (opcional, para desarrollo puedes comentarlo)
-# requirepass your_redis_password_123
-
 # Logs
 loglevel notice
 logfile ""
@@ -233,11 +230,18 @@ tcp-keepalive 300
 '@
 
     if (-not (Test-Path (Join-Path $redisDir "redis.conf"))) {
-        $redisConf | Out-File -FilePath (Join-Path $redisDir "redis.conf") -Encoding UTF8
-        Write-ColorOutput "Archivo creado: Databases/redis/redis.conf" "Green"
+        # Guardar sin BOM usando UTF-8 sin BOM
+        $utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $false
+        [System.IO.File]::WriteAllText((Join-Path $redisDir "redis.conf"), $redisConf, $utf8NoBomEncoding)
+        Write-ColorOutput "Archivo creado: Databases/redis/redis.conf (sin BOM)" "Green"
+    } else {
+        # Si el archivo existe, reemplazarlo sin BOM
+        $utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $false
+        [System.IO.File]::WriteAllText((Join-Path $redisDir "redis.conf"), $redisConf, $utf8NoBomEncoding)
+        Write-ColorOutput "Archivo actualizado: Databases/redis/redis.conf (sin BOM)" "Green"
     }
     
-    # docker-compose.yml para Redis
+    # docker-compose.yml para Redis - CORREGIDO
     $redisCompose = @'
 services:
   redis:
@@ -249,7 +253,7 @@ services:
     volumes:
       - ./data:/data
       - ./redis.conf:/usr/local/etc/redis/redis.conf
-    command: redis-server /usr/local/etc/redis/redis.conf --appendonly yes
+    command: redis-server /usr/local/etc/redis/redis.conf
     restart: unless-stopped
     networks:
       - db-network
@@ -445,7 +449,7 @@ function Start-Services {
     
     Push-Location $DatabasesDir
     try {
-      
+
         docker-compose -f global-compose.yml up -d
         
         if ($LASTEXITCODE -eq 0) {
