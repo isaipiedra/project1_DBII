@@ -914,6 +914,81 @@ html {
     transition: 0.2s ease;
 }
 
+/* ---- SPECIFIC CHANGES FOR CHATS ---- */
+.main_chat {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    flex: 1;
+    align-items: center;
+    overflow-y: auto;
+}
+
+.user_chats {
+    display: flex;
+    flex-direction: column;
+    padding: 1em;
+    width: 80%;
+    height: 80%;
+    overflow-y: auto;
+}
+
+.message {
+    border-radius: 10px;
+    padding: 1em;
+    width: 40%;
+}
+
+.message:nth-child(odd) {
+    background-color: var(--lighter-purple);
+    align-self: flex-start;
+}
+
+.message:nth-child(even) {
+    background-color: var(--light-purple);
+    align-self: flex-end;
+}
+
+.message p {
+    font-weight: 600;
+    color: var(--input-text);
+}
+
+.user_message_box {    
+    width: 80%;
+    height: 20%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user_message_box input {
+    border: none;
+    padding: 0.25em 0.5em;
+    margin-right: 1em;
+    width: 60%;
+    font-size: 20px;
+    background-color: var(--light-gray);
+    color: var(--input-text);
+}
+
+.user_message_box input:focus {
+    outline: none;
+    background-color: var(--lighter-gray);
+    transition: 0.2s ease;
+}
+
+.user_message_box i {
+    font-size: 40px;
+    color: var(--light-gray);
+    cursor: pointer;
+}
+
+.user_message_box i:hover {
+    color: var(--input-text);
+    transition: 0.2s ease;
+}
+
 /* --------------------- ---------- ---------------------- */
 
 /* ----------------------- PROFILE ----------------------- */

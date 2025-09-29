@@ -20,7 +20,7 @@ const user_info = document.querySelector('#user_info');
 const side_inbox = document.querySelector('#side_inbox');
 
 tooltip_left.addEventListener('click', () => {
-    side_inbox.style = 'display:none; transition:ease 0.2s';
+    side_inbox.style = 'display:none;';
     user_inbox_menu.style = 'visibility:visible';
 });
 
@@ -30,7 +30,7 @@ user_inbox_menu.addEventListener('click', () => {
 });
 
 tooltip_right.addEventListener('click', () => {
-    user_info.style = 'display:none; transition:ease 0.2s';
+    user_info.style = 'display:none;';
     user_info_menu.style = 'visibility:visible';
 });
 
