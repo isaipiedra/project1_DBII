@@ -10,7 +10,7 @@ class UserService {
     }
 
     // Validar campos requeridos
-    const { firstName, lastName, birthDate, password } = userData;
+    const { firstName, lastName, birthDate, password, profilePicture } = userData;
     if (!firstName || !lastName || !birthDate || !password) {
       throw new Error('Todos los campos son requeridos');
     }
@@ -22,7 +22,10 @@ class UserService {
       firstName,
       lastName,
       birthDate,
-      password: hashedPassword
+      password: hashedPassword,
+      profilePicture: profilePicture || null, // Guardar la imagen en base64
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
 
     await redisClient.setUser(username, userToSave);
@@ -31,7 +34,8 @@ class UserService {
       username,
       firstName,
       lastName,
-      birthDate
+      birthDate,
+      profilePicture: userToSave.profilePicture
     };
   }
 
@@ -59,13 +63,37 @@ class UserService {
       firstName: updateData.firstName || existingUser.firstName,
       lastName: updateData.lastName || existingUser.lastName,
       birthDate: updateData.birthDate || existingUser.birthDate,
-      password: existingUser.password
+      profilePicture: updateData.profilePicture !== undefined ? updateData.profilePicture : existingUser.profilePicture,
+      password: existingUser.password,
+      createdAt: existingUser.createdAt,
+      updatedAt: new Date().toISOString()
     };
 
     // Si se proporciona nueva contraseña, encriptarla
     if (updateData.password) {
       updatedUser.password = await bcrypt.hash(updateData.password, 12);
     }
+
+    await redisClient.setUser(username, updatedUser);
+
+    const { password, ...userWithoutPassword } = updatedUser;
+    return {
+      username,
+      ...userWithoutPassword
+    };
+  }
+
+  async updateProfilePicture(username, profilePicture) {
+    const existingUser = await redisClient.getUser(username);
+    if (!existingUser) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    const updatedUser = {
+      ...existingUser,
+      profilePicture,
+      updatedAt: new Date().toISOString()
+    };
 
     await redisClient.setUser(username, updatedUser);
 

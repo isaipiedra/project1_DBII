@@ -42,14 +42,33 @@ class RedisClient {
     }
   }
 
-  async setUser(username, userData) {
+  async ensureConnection() {
+    if (!this.isConnected) {
+      console.log('Verificando conexión a Redis...');
+      try {
+        await this.ping();
+      } catch (error) {
+        console.log('Reconectando a Redis...');
+        await this.connect();
+      }
+    }
+  }
+  
+  async setUserWithLargeData(username, userData) {
+    await this.ensureConnection();
     try {
+      // Para datos grandes como imágenes, podemos comprimir o dividir si es necesario
       const result = await this.client.set(username, JSON.stringify(userData));
+      console.log(`Usuario ${username} guardado en Redis`);
       return result;
     } catch (error) {
-      console.error('Error guardando usuario:', error);
+      console.error('Error guardando usuario con imagen:', error);
       throw error;
     }
+  }
+
+  async setUser(username, userData) {
+    return await this.setUserWithLargeData(username, userData);
   }
 
   async getUser(username) {

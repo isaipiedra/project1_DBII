@@ -148,15 +148,30 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.disabled = true;
         
         try {
+
+            // Obtener la imagen como base64 si existe
+            let profilePictureBase64 = null;
+            const fileInput = document.getElementById('profilePicture');
+            
+            if (fileInput.files.length > 0) {
+                profilePictureBase64 = await convertImageToBase64(fileInput.files[0]);
+            }
+
             // Preparar datos del formulario
             const formData = {
                 firstName: document.getElementById('firstName').value.trim(),
                 lastName: document.getElementById('lastName').value.trim(),
                 birthDate: document.getElementById('dateOfBirth').value,
-                password: document.getElementById('password').value
+                password: document.getElementById('password').value,
+                profilePicture: profilePictureBase64
             };
             
             const username = document.getElementById('username').value.trim();
+
+            // Validar el tamaño de la imágen
+            if (profilePictureBase64 && profilePictureBase64.length > 1.5 * 1024 * 1024) {
+                throw new Error('La imagen es demasiado grande. Máximo 1MB permitido.');
+            }
             
             // Enviar datos a la API
             const response = await fetch(`${API_BASE_URL}/users/${username}`, {
@@ -190,6 +205,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (error.message.includes('usuario ya existe') || error.message.includes('already exists')) {
                 showError(document.getElementById('usernameError'), 'Username already exists');
                 document.getElementById('username').parentElement.classList.add('error');
+            } else if (error.message.includes('demasiado grande')) {
+                showError(document.getElementById('fileError'), 'Image too large. Maximum 1MB allowed.');
             } else if (error.message.includes('network') || error.message.includes('fetch')) {
                 showGeneralError('Network error. Please check if the server is running.');
             } else {
@@ -203,6 +220,60 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Función para convertir imagen a Base64
+    function convertImageToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                // Redimensionar imagen si es muy grande antes de convertir a base64
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Tamaño máximo para la imagen
+                    const MAX_WIDTH = 300;
+                    const MAX_HEIGHT = 300;
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Convertir a base64 con calidad reducida para ahorrar espacio
+                    const resizedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    resolve(resizedBase64);
+                };
+                
+                img.onerror = function() {
+                    // Si no se puede redimensionar, usar el original
+                    resolve(e.target.result);
+                };
+                
+                img.src = e.target.result;
+            };
+            
+            reader.onerror = function(error) {
+                reject(error);
+            };
+            
+            reader.readAsDataURL(file);
+        });
+    }
     function validateForm() {
         let isValid = true;
         

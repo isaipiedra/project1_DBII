@@ -11,7 +11,7 @@ const port = process.env.API_PORT || 3000;
 
 // Middleware
 app.use(cors());
-app.use(json());
+app.use(json({ limit: '10mb' })); // Aumentar de 100kb a 10mb
 app.use(express.static('public'));
 
 // Routes
@@ -158,6 +158,64 @@ app.post('/auth/login', async (req, res) => {
     
     if (error.message === 'Credenciales inválidas') {
       return res.status(401).json({ error: error.message });
+    }
+    
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Obtener imagen de perfil de usuario
+app.get('/users/:username/profile-picture', async (req, res) => {
+  try {
+    const { username } = req.params;
+    const user = await userService.getUser(username);
+    
+    if (!user.profilePicture) {
+      return res.status(404).json({ error: 'No profile picture found' });
+    }
+    
+    // Extraer el tipo MIME y los datos base64
+    const matches = user.profilePicture.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
+    
+    if (!matches || matches.length !== 3) {
+      return res.status(400).json({ error: 'Invalid image data' });
+    }
+    
+    const mimeType = matches[1];
+    const imageBuffer = Buffer.from(matches[2], 'base64');
+    
+    res.set('Content-Type', mimeType);
+    res.set('Cache-Control', 'public, max-age=86400'); // Cache por 1 día
+    res.send(imageBuffer);
+    
+  } catch (error) {
+    console.error('Error obteniendo imagen de perfil:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Actualizar solo la imagen de perfil
+app.put('/users/:username/profile-picture', async (req, res) => {
+  try {
+    const { username } = req.params;
+    const { profilePicture } = req.body;
+    
+    if (!profilePicture) {
+      return res.status(400).json({ error: 'Profile picture is required' });
+    }
+    
+    const result = await userService.updateProfilePicture(username, profilePicture);
+    
+    res.json({
+      message: 'Profile picture updated successfully',
+      user: result
+    });
+    
+  } catch (error) {
+    console.error('Error actualizando imagen de perfil:', error);
+    
+    if (error.message === 'Usuario no encontrado') {
+      return res.status(404).json({ error: 'User not found' });
     }
     
     res.status(500).json({ error: 'Error interno del servidor' });
