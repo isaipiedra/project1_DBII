@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS DATASET_VOTE (dataset_id text, user_id text, dataset_
 CREATE TABLE IF NOT EXISTS DOWNLOADED_DATASET (dataset_id text, user_id text, dataset_name text, dataset_description text, user_name text, PRIMARY KEY(dataset_id, user_id));
 
 --Dataset main comments table
-CREATE TABLE  IF NOT EXISTS COMMENT_DS(id_dataset text, id_comment timeuuid, user_name text, commment text, visible boolean, PRIMARY KEY (id_dataset, id_comment)) with CLUSTERING ORDER BY (id_comment DESC);
+CREATE TABLE  IF NOT EXISTS COMMENT_DS(id_dataset text, id_comment timeuuid, user_name text, comment text, visible boolean, PRIMARY KEY (id_dataset, id_comment)) with CLUSTERING ORDER BY (id_comment DESC);
 
 --Dataset comment reply table
 CREATE TABLE IF NOT EXISTS COMMENT_REPLY (id_comment timeuuid,reply_id timeuuid, username text, REPLY text,visible boolean,  PRIMARY KEY(id_comment, reply_id)) WITH CLUSTERING ORDER BY (reply_id ASC);
