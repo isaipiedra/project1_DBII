@@ -44,7 +44,7 @@ services:
     volumes:
       - ./redis/data:/data
       - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
-    command: redis-server /usr/local/etc/redis/redis.conf --appendonly yes
+    command: redis-server /usr/local/etc/redis/redis.conf
     networks:
       - db-network
     healthcheck:
@@ -52,6 +52,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    restart: unless-stopped
 
   # Replica Set Initialization
   rs-init:

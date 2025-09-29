@@ -197,25 +197,39 @@ function Create-RedisFiles {
     $redisConf = @'
 bind 0.0.0.0
 port 6379
-timeout 0
-tcp-keepalive 300
-daemonize no
-supervised no
-pidfile /var/run/redis_6379.pid
-loglevel notice
-logfile ""
-dbii_databases 16
-always-show-logo no
+
+# Persistencia RDB
 save 900 1
-save 300 10
+save 300 10  
 save 60 10000
-stop-writes-on-bgsave-error yes
+stop-writes-on-bgsave-error no
 rdbcompression yes
 rdbchecksum yes
 dbfilename dump.rdb
 dir /data
+
+# Persistencia AOF
 appendonly yes
 appendfilename "appendonly.aof"
+appendfsync everysec
+no-appendfsync-on-rewrite no
+auto-aof-rewrite-percentage 100
+auto-aof-rewrite-min-size 64mb
+
+# Memoria
+maxmemory 512mb
+maxmemory-policy allkeys-lru
+
+# Seguridad (opcional, para desarrollo puedes comentarlo)
+# requirepass your_redis_password_123
+
+# Logs
+loglevel notice
+logfile ""
+
+# Conexiones
+timeout 0
+tcp-keepalive 300
 '@
 
     if (-not (Test-Path (Join-Path $redisDir "redis.conf"))) {
@@ -236,6 +250,7 @@ services:
       - ./data:/data
       - ./redis.conf:/usr/local/etc/redis/redis.conf
     command: redis-server /usr/local/etc/redis/redis.conf --appendonly yes
+    restart: unless-stopped
     networks:
       - db-network
     healthcheck:
@@ -303,7 +318,7 @@ services:
     volumes:
       - ./redis/data:/data
       - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
-    command: redis-server /usr/local/etc/redis/redis.conf --appendonly yes
+    command: redis-server /usr/local/etc/redis/redis.conf
     networks:
       - db-network
     healthcheck:
@@ -311,6 +326,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    restart: unless-stopped
 
   # Replica Set Initialization
   rs-init:
@@ -361,6 +377,9 @@ function Create-EnvironmentFiles {
     $envExample = @'
 MONGO_URI=mongodb://localhost:27017/?replicaSet=rs0
 REDIS_URL=redis://localhost:6379
+REDIS_HOST=localhost
+REDIS_PORT=6379
+API_PORT=3000
 '@
 
     if (-not (Test-Path (Join-Path $ProjectRoot ".env.example"))) {
@@ -412,19 +431,47 @@ function Start-Services {
     # Inicializar entorno
     Initialize-Environment
     
+    # Verificar que Redis esté configurado correctamente
+    $redisConfPath = Join-Path $DatabasesDir "redis/redis.conf"
+    if (Test-Path $redisConfPath) {
+        $redisConfContent = Get-Content $redisConfPath -Raw
+        if ($redisConfContent -notmatch "appendonly yes") {
+            Write-ColorOutput "ADVERTENCIA: Redis no tiene persistencia habilitada" "Yellow"
+        }
+    }
+    
     # Ejecutar docker-compose desde el directorio Databases
     Write-ColorOutput "Iniciando contenedores Docker..." "Yellow"
     
     Push-Location $DatabasesDir
     try {
+      
         docker-compose -f global-compose.yml up -d
         
         if ($LASTEXITCODE -eq 0) {
             Write-ColorOutput "Servicios iniciados correctamente" "Green"
-            Write-ColorOutput "Monitoreando estado de los servicios..." "Yellow"
             
-            # Esperar y mostrar estado
-            Start-Sleep -Seconds 10
+            # Esperar a que los servicios estén saludables
+            Write-ColorOutput "Esperando a que los servicios estén listos..." "Yellow"
+            Start-Sleep -Seconds 15
+            
+            # Verificar estado de Redis específicamente
+            Write-ColorOutput "Verificando estado de Redis..." "Cyan"
+            $redisStatus = docker exec redis redis-cli ping
+            if ($redisStatus -eq "PONG") {
+                Write-ColorOutput "Redis está funcionando correctamente" "Green"
+                
+                # Verificar persistencia
+                $persistence = docker exec redis redis-cli info persistence
+                if ($persistence -match "aof_enabled:1") {
+                    Write-ColorOutput "Persistencia AOF está habilitada" "Green"
+                } else {
+                    Write-ColorOutput "ADVERTENCIA: Persistencia AOF no está habilitada" "Yellow"
+                }
+            } else {
+                Write-ColorOutput "ERROR: Redis no responde" "Red"
+            }
+            
             Show-ServicesStatus
 
         } else {
