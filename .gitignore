@@ -1,8 +1,6 @@
 node_modules/
 
 # Datos de bases de datos
-Databases/mongo/data/
-Databases/redis/data/
 
 # Archivos de entorno local
 .env
