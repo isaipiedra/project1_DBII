@@ -2,8 +2,8 @@ const cassandra = require('cassandra-driver');
 const assert = require('assert'); 
 
 const client = new cassandra.Client({
-    contactPoints: ['127.0.0.1'], 
-    localDataCenter: 'datacenter1',
+    contactPoints: ['127.0.0.1:9042'], 
+    localDataCenter: 'dc1',
     keyspace: 'dataset_message_management'
 });
 
