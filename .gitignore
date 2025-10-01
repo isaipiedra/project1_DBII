@@ -1,6 +1,7 @@
 node_modules/
 
 # Datos de bases de datos
+Databases/
 
 # Archivos de entorno local
 .env
