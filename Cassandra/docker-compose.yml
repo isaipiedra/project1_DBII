@@ -1,0 +1,59 @@
+version: "3.8"
+
+services:
+  cass1:
+    image: cassandra:4.1
+    container_name: cass1
+    hostname: cass1
+    networks: [cass-net]
+    ports:
+      - "9042:9042"
+      - "7000:7000"
+      - "7001:7001"
+      - "7199:7199"
+    environment:
+      CASSANDRA_CLUSTER_NAME: "LocalClusterCass"
+      CASSANDRA_NUM_TOKENS: 16
+      CASSANDRA_SEEDS: "cass1"          # Usado por el segundo nodo
+      CASSANDRA_BROADCAST_ADDRESS: "cass1"  # Cómo me anuncio a los demás
+      CASSANDRA_LISTEN_ADDRESS: "auto"  # Escucha en su IP interna
+      CASSANDRA_RPC_ADDRESS: "0.0.0.0"  # Para aceptar clientes
+      CASSANDRA_ENDPOINT_SNITCH: "GossipingPropertyFileSnitch" # Para DC/rack
+    volumes:
+      - cass1_data:/var/lib/cassandra  # Datos persistentes
+    healthcheck:
+      test: ["CMD", "nodetool", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+
+  cass2:
+    image: cassandra:4.1
+    container_name: cass2
+    hostname: cass2
+    networks: [cass-net]
+    environment:
+      CASSANDRA_CLUSTER_NAME: "LocalClusterCass"
+      CASSANDRA_NUM_TOKENS: 16
+      CASSANDRA_SEEDS: "cass1" # Misma seed que el primero
+      CASSANDRA_BROADCAST_ADDRESS: "cass2"
+      CASSANDRA_LISTEN_ADDRESS: "auto"
+      CASSANDRA_RPC_ADDRESS: "0.0.0.0"
+      CASSANDRA_ENDPOINT_SNITCH: "GossipingPropertyFileSnitch"
+    volumes:
+      - cass2_data:/var/lib/cassandra
+    depends_on:
+      cass1:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "nodetool", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+
+networks:
+  cass-net:
+
+volumes:
+  cass1_data:
+  cass2_data:

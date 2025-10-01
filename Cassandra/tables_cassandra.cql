@@ -1,4 +1,4 @@
-CREATE KEYSPACE IF NOT EXISTS  DATASET_MESSAGE_MANAGEMENT WITH REPLICATION = {'class':'SimpleStrategy','replication_factor':'1'} AND durable_writes = 'true';
+CREATE KEYSPACE IF NOT EXISTS  DATASET_MESSAGE_MANAGEMENT WITH REPLICATION = {'class':'SimpleStrategy','replication_factor': 2} AND durable_writes = true;
 
 USE DATASET_MESSAGE_MANAGEMENT;
 
