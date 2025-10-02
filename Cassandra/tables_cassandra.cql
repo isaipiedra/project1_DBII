@@ -3,7 +3,9 @@ CREATE KEYSPACE IF NOT EXISTS  DATASET_MESSAGE_MANAGEMENT WITH REPLICATION = {'c
 USE DATASET_MESSAGE_MANAGEMENT;
 
 --Vote's table. Has the user data and dataset data  
-CREATE TABLE IF NOT EXISTS DATASET_VOTE (dataset_id text, user_id text, dataset_name text, dataset_description text, user_name text, calification text, PRIMARY KEY(dataset_id, user_id)); 
+CREATE TABLE IF NOT EXISTS DATASET_VOTE (dataset_id text, user_id text, dataset_name text, dataset_description text, user_name text, calification int, PRIMARY KEY(dataset_id, user_id)); 
+
+CREATE TABLE IF NOT EXISTS VOTE_BY_USER_DS (user_id text, dataset_id text, dataset_name text, dataset_description text, calification int, PRIMARY KEY (user_id, dataset_id));
 
 --Dataset downloads 
 CREATE TABLE IF NOT EXISTS DOWNLOADED_DATASET (dataset_id text, user_id text, dataset_name text, dataset_description text, user_name text, PRIMARY KEY(dataset_id, user_id));
@@ -13,7 +15,5 @@ CREATE TABLE  IF NOT EXISTS COMMENT_DS(id_dataset text, id_comment timeuuid, use
 
 --Dataset comment reply table
 CREATE TABLE IF NOT EXISTS COMMENT_REPLY (id_comment timeuuid,reply_id timeuuid, username text, REPLY text,visible boolean,  PRIMARY KEY(id_comment, reply_id)) WITH CLUSTERING ORDER BY (reply_id ASC);
-
-
 
 
