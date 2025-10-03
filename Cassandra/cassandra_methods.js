@@ -279,6 +279,28 @@ export async function get_votes_by_user(user_id) {
 }
 
 
+/*Downloads-----------------------------------------------------------------------*/
+export async function record_new_download( dataset_id, user_id, dataset_description, dataset_name, user_name)
+{
+
+  const query_insert = `INSERT INTO DOWNLOADED_DATASET (dataset_id, user_id, dataset_description, dataset_name, user_name)
+    VALUES (?, ?, ?, ?, ?) IF NOT EXISTS`;
+
+  const insert = await client.execute(query_insert, [dataset_id, user_id, dataset_description, dataset_name, user_name], {prepare:true});
+  return {dataset_id, user_id, dataset_description, dataset_name, user_name,inserted: insert.wasApplied() }
+
+}
+
+export async function get_downloads_by_dataset(dataset_id) {
+  const query = `
+    SELECT dataset_id, user_id, dataset_description, dataset_name, user_name
+    FROM downloaded_dataset
+    WHERE dataset_id = ?
+  `;
+  const result = await client.execute(query, [dataset_id], { prepare: true });
+  return result.rows;
+}
+
 /**const query = 'SELECT * FROM COMMENT_DS';
 
 client.execute(query).then(result => {

@@ -5,6 +5,7 @@ USE DATASET_MESSAGE_MANAGEMENT;
 --Vote's table. Has the user data and dataset data  
 CREATE TABLE IF NOT EXISTS DATASET_VOTE (dataset_id text, user_id text, dataset_name text, dataset_description text, user_name text, calification int, PRIMARY KEY(dataset_id, user_id)); 
 
+--New one
 CREATE TABLE IF NOT EXISTS VOTE_BY_USER_DS (user_id text, dataset_id text, dataset_name text, dataset_description text, calification int, PRIMARY KEY (user_id, dataset_id));
 
 --Dataset downloads 

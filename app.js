@@ -7,7 +7,8 @@ import { init_cassandra,
   get_all_comments_by_dataset,
   update_comment_visibility, reply_comment,
   get_comment_replies, update_reply_visibility,
-  add_dataset_vote, get_votes_by_dataset, get_votes_by_user } from './Cassandra/cassandra_methods.js';
+  add_dataset_vote, get_votes_by_dataset, get_votes_by_user,
+  record_new_download, get_downloads_by_dataset} from './Cassandra/cassandra_methods.js';
 
 
 const app = express();
@@ -221,6 +222,42 @@ app.get('/api/get_votes_by_user', async (req, res) => {
     res.status(500).json({ error: "Error" });
   }
 });
+
+
+/*Downloads---------------------------------------------------------------*/
+app.post('/api/record_new_download', async (req, res)=>{
+  try{
+    const {dataset_id, user_id, dataset_description, dataset_name, user_name} = req.body;
+    if(!dataset_id || !user_id || !dataset_description || !dataset_name || !user_name)
+    {
+      return res.status(400).json({error: "Falta 'dataset_id' o 'user_id', 'dataset_description' o 'dataset_name' o 'user_name'"});
+    }
+
+    const rows = await record_new_download (dataset_id, user_id, dataset_description, dataset_name, user_name);
+    res.json(rows);
+
+  }catch(error){
+    console.error("/api/record_new_download:", error);
+    res.status(500).json({ error: "Error" });
+  }
+});
+
+
+app.get('/api/get_downloads_by_dataset', async (req, res) => {
+  try {
+    const {dataset_id } = req.query;
+    if (!dataset_id) {
+      return res.status(400).json({ error: "Falta 'dataset_id'" });
+    }
+    const rows = await get_downloads_by_dataset(dataset_id);
+    res.json(rows);
+  } catch (error) {
+    console.error("get_downloads_by_dataset:", error);
+    res.status(500).json({ error: "Error" });
+  }
+});
+
+
 
 /*Cassandra methods end here*/
 async function startServer() {
