@@ -210,7 +210,7 @@ export async function update_reply_visibility(id_comment, reply_id, visible)
               `;
 
   const id_comment_timeuuid = types.TimeUuid.fromString(id_comment);
-  const id_reply_timeuuid = types.TimeUuid.fromString(id_comment);
+  const id_reply_timeuuid = types.TimeUuid.fromString(reply_id);
   const params = [visible, id_comment_timeuuid, id_reply_timeuuid];
   await client.execute(query, params, {prepare: true});
   

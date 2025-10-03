@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "First programmed project for Databases II. Group 2. An app to share data.",
   "main": "app.js",
+   "type": "module",
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js"
