@@ -1,9 +1,5 @@
-# MongoDB
+# Databases
 Databases/
-MongoDB/data/
-
-# Redis  
-Databases/redis/data/
 
 # Node.js
 node_modules/
