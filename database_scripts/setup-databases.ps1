@@ -417,6 +417,143 @@ function Initialize-Environment {
     Create-EnvironmentFiles
 }
 
+function Create-AdminUserScript {
+    $scriptsDir = Join-Path $ProjectRoot "scripts"
+    
+    # Create the admin user creation script
+    $adminScript = @'
+import { createClient } from 'redis';
+import bcrypt from 'bcryptjs';
+
+async function createAdminUser() {
+    const client = createClient({
+        socket: {
+            host: 'localhost',
+            port: 6379
+        }
+    });
+
+    try {
+        await client.connect();
+        console.log('Creating admin user...');
+
+        const username = 'Admin';
+        const password = 'Admin12345';
+        const firstName = 'Admin';
+        const lastName = 'istrator';
+        const currentDate = new Date().toISOString();
+
+        // Check if admin user already exists
+        const existingUser = await client.get(username);
+        if (existingUser) {
+            console.log('Admin user already exists');
+            await client.disconnect();
+            return;
+        }
+
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password, 12);
+
+        // Create admin user object
+        const adminUser = {
+            firstName,
+            lastName,
+            birthDate: currentDate.split('T')[0],
+            password: hashedPassword,
+            profilePicture: null,
+            admin: true,
+            createdAt: currentDate,
+            updatedAt: currentDate
+        };
+
+        // Save to Redis
+        await client.set(username, JSON.stringify(adminUser));
+        console.log('Admin user created successfully!');
+        console.log('Username: Admin');
+        console.log('Password: Admin12345');
+
+        await client.disconnect();
+        
+    } catch (error) {
+        console.error('Error creating admin user:', error.message);
+        // Don't exit, just log the error
+    }
+}
+
+createAdminUser();
+'@
+
+    $adminScriptPath = Join-Path $scriptsDir "create-admin.js"
+    $adminScript | Out-File -FilePath $adminScriptPath -Encoding UTF8
+    Write-ColorOutput "Archivo creado: scripts/create-admin.js" "Green"
+}
+
+function Initialize-AdminUser {
+    Write-ColorOutput "Inicializando usuario administrador..." "Cyan"
+    
+    # Wait for Redis to be ready
+    Write-ColorOutput "Esperando a que Redis esté listo..." "Yellow"
+    Start-Sleep -Seconds 10
+    
+    # Check if Node.js is available
+    try {
+        $null = Get-Command node -ErrorAction Stop
+        $null = Get-Command npm -ErrorAction Stop
+        
+        # Install required dependencies
+        Write-ColorOutput "Instalando dependencias..." "Yellow"
+        Push-Location $ProjectRoot
+        try {
+            npm install redis bcryptjs
+        } finally {
+            Pop-Location
+        }
+        
+        # Run the admin creation script
+        Write-ColorOutput "Creando usuario administrador..." "Yellow"
+        $adminScriptPath = Join-Path $ProjectRoot "scripts/create-admin.js"
+        node $adminScriptPath
+        
+    } catch {
+        Write-ColorOutput "Node.js no está disponible. Creando usuario manualmente..." "Yellow"
+        Initialize-AdminUserManual
+    }
+}
+
+function Initialize-AdminUserManual {
+    Write-ColorOutput "Creando usuario administrador manualmente..." "Yellow"
+    
+    # Wait for Redis to be ready
+    Start-Sleep -Seconds 15
+    
+    try {
+        # Create admin user using redis-cli
+        $currentDate = Get-Date -Format "yyyy-MM-dd"
+        $adminUserJson = @{
+            firstName = "Admin"
+            lastName = "istrator"
+            birthDate = $currentDate
+            password = "TEMPORARY_PASSWORD_NEEDS_UPDATE"
+            profilePicture = $null
+            admin = $true
+            createdAt = (Get-Date).ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+            updatedAt = (Get-Date).ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+        } | ConvertTo-Json
+        
+        # Escape the JSON for command line
+        $adminUserJsonEscaped = $adminUserJson -replace '"', '\"'
+        
+        # Set the admin user in Redis
+        docker exec redis-master redis-cli SET Admin $adminUserJsonEscaped
+        
+        Write-ColorOutput "Usuario administrador creado manualmente" "Green"
+        Write-ColorOutput "NOTA: La contraseña necesita ser actualizada en el primer login" "Yellow"
+        
+    } catch {
+        Write-ColorOutput "Error creando usuario administrador manualmente: $_" "Red"
+    }
+}
+
 function Start-Services {
     Write-ColorOutput "Iniciando servicios de bases de datos..." "Cyan"
     
@@ -428,6 +565,9 @@ function Start-Services {
     
     # Inicializar entorno
     Initialize-Environment
+    
+    # Create admin user script
+    Create-AdminUserScript
     
     # Ejecutar docker-compose desde el directorio Databases
     Write-ColorOutput "Iniciando contenedores Docker..." "Yellow"
@@ -443,21 +583,32 @@ function Start-Services {
             Write-ColorOutput "Esperando a que los servicios estén listos..." "Yellow"
             Start-Sleep -Seconds 20
             
-            # Verificar estado del Redis Cluster
-            Write-ColorOutput "Verificando estado del Redis Cluster..." "Cyan"
+            # Create admin user
+            Initialize-AdminUser
+            
+            # Verificar estado del Redis
+            Write-ColorOutput "Verificando estado de Redis..." "Cyan"
             try {
-                $clusterInfo = docker exec redis1 redis-cli cluster info
-                if ($clusterInfo -match "cluster_state:ok") {
-                    Write-ColorOutput "Redis Cluster está funcionando correctamente" "Green"
+                $redisInfo = docker exec redis-master redis-cli ping
+                if ($redisInfo -eq "PONG") {
+                    Write-ColorOutput "Redis está funcionando correctamente" "Green"
                     
-                    # Mostrar información del cluster
-                    Write-ColorOutput "Información del Redis Cluster:" "Cyan"
-                    docker exec redis1 redis-cli cluster nodes
+                    # Verify admin user was created
+                    try {
+                        $adminUser = docker exec redis-master redis-cli GET Admin
+                        if ($adminUser) {
+                            Write-ColorOutput "Usuario administrador creado exitosamente" "Green"
+                        } else {
+                            Write-ColorOutput "ADVERTENCIA: No se pudo crear el usuario administrador" "Yellow"
+                        }
+                    } catch {
+                        Write-ColorOutput "ADVERTENCIA: No se pudo verificar el usuario administrador" "Yellow"
+                    }
                 } else {
-                    Write-ColorOutput "ADVERTENCIA: Redis Cluster no está completamente inicializado" "Yellow"
+                    Write-ColorOutput "ADVERTENCIA: Redis no responde correctamente" "Yellow"
                 }
             } catch {
-                Write-ColorOutput "ERROR: No se pudo verificar el estado del Redis Cluster" "Red"
+                Write-ColorOutput "ERROR: No se pudo verificar el estado de Redis" "Red"
             }
             
             Show-ServicesStatus

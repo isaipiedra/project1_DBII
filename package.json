@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node app.js",
-    "dev": "nodemon app.js"
+    "dev": "nodemon app.js",
+    "create-admin": "node scripts/create-admin.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -16,7 +17,7 @@
     "express": "^5.1.0",
     "mongoose": "^8.19.0",
     "neo4j-driver": "^6.0.0",
-    "redis": "^4.6.7"
+    "redis": "^4.7.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

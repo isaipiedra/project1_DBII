@@ -16,7 +16,7 @@ import { init_cassandra,
   add_dataset_vote, get_votes_by_dataset, get_votes_by_user,
   record_new_download, get_downloads_by_dataset, start_conversation,
   get_user_conversations, conversation_exists,send_message, get_conversation_messages, get_latest_message} 
-  from './Cassandra/cassandra_methods.js';
+  from './Databases/Cassandra/cassandra_methods.js';
 
   /* MongoDB */
   import { connectMongo,
@@ -27,7 +27,7 @@ import { init_cassandra,
     deleteDataSet,
     getDatasetsByName,
     cloneDatasetById,
-    getApprovedDatasets,} from './Mongodb/mongodb.js';
+    getApprovedDatasets,} from './Databases/Mongodb/mongodb.js';
   import mongoose from 'mongoose';
   import { GridFSBucket } from 'mongodb';
 
