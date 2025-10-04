@@ -25,7 +25,6 @@ import { init_cassandra,
     DataSet,
     approveDataSet,
     deleteDataSet,
-    getDatasetById,
     getDatasetsByName,
     cloneDatasetById,
     getApprovedDatasets,} from './Mongodb/mongodb.js';
@@ -86,62 +85,6 @@ app.post('/api/add_dataset', async (req, res) => {
 
 
 
-// Descargar archivo de GridFS
-app.get('/api/files/:fileId', (req, res) => {
-  try {
-    const { ObjectId } = mongoose.Types;
-    const fileId = new ObjectId(req.params.fileId);
-    const bucket = getBucket(); 
-
-    bucket.openDownloadStream(fileId)
-      .on('file', (file) => {
-        res.set({
-          'Content-Type': file.contentType || 'application/octet-stream',
-          'Content-Disposition': `inline; filename="${file.filename}"`
-        });
-      })
-      .on('error', () => res.status(404).json({ error: 'Archivo no encontrado' }))
-      .pipe(res);
-
-  } catch (e) {
-    res.status(400).json({ error: 'ID inválido' });
-  }
-});
-
-// Obtener dataset por ID
-app.get('/api/datasets/:id', async (req, res) => {
-  try {
-    const dataset = await DataSet.findById(req.params.id).lean();
-    if (!dataset) return res.status(404).json({ error: "Dataset no encontrado" });
-    res.json(dataset);
-  } catch (err) {
-    console.error("get dataset error:", err);
-    res.status(500).json({ error: "Error" });
-  }
-});
-
-// Aprobar dataset por ID
-app.patch('/api/:id/approve', async (req, res) => {
-  try {
-    const ds = await approveDataSet(req.params.id);
-    res.json(ds);
-  } catch (e) {
-    const code = /no encontrado/i.test(e.message) ? 404 : 400;
-    res.status(code).json({ error: e.message });
-  }
-});
-
-// Eliminar dataset por ID
-app.patch('/api/:id/delete', async (req, res) => {
-  try {
-    const ds = await deleteDataSet(req.params.id);
-    res.json(ds);
-  } catch (e) {
-    const code = /no encontrado/i.test(e.message) ? 404 : 400;
-    res.status(code).json({ error: e.message });
-  }
-});
-
 // Mostrar todos los datasets aprobados
 app.get('/api/datasets/approved', async (req, res) => {
   try {
@@ -177,6 +120,88 @@ app.get('/api/datasets/by-name', async (req, res) => {
     res.status(400).json({ error: e.message });
   }
 });
+
+// Descargar archivo de GridFS
+app.get('/api/files/:fileId', (req, res) => {
+  try {
+    const { ObjectId } = mongoose.Types;
+    const fileId = new ObjectId(req.params.fileId);
+    const bucket = getBucket(); 
+
+    bucket.openDownloadStream(fileId)
+      .on('file', (file) => {
+        res.set({
+          'Content-Type': file.contentType || 'application/octet-stream',
+          'Content-Disposition': `inline; filename="${file.filename}"`
+        });
+      })
+      .on('error', () => res.status(404).json({ error: 'Archivo no encontrado' }))
+      .pipe(res);
+
+  } catch (e) {
+    res.status(400).json({ error: 'ID inválido' });
+  }
+});
+
+
+// Clonar dataset por ID 
+app.post('/api/datasets/:id/clone', async (req, res) => {
+  try {
+    const { newName } = req.body || {};
+    if (!newName || typeof newName !== 'string' || !newName.trim()) {
+      return res.status(400).json({ error: "Falta 'newName' (string no vacío) en el body." });
+    }
+
+    const cloned = await cloneDatasetById(req.params.id, newName.trim());
+    res.status(201).json(cloned);
+
+  } catch (err) {
+    if (/ID inválido/i.test(err.message)) {
+      return res.status(400).json({ error: err.message });
+    }
+    if (/origen no encontrado/i.test(err.message) || /no encontrado/i.test(err.message)) {
+      return res.status(404).json({ error: err.message });
+    }
+    console.error("cloneDatasetById error:", err);
+    res.status(500).json({ error: "Error al clonar dataset" });
+  }
+});
+
+// Obtener dataset por ID
+app.get('/api/datasets/:id', async (req, res) => {
+  try {
+    const dataset = await DataSet.findById(req.params.id).lean();
+    if (!dataset) return res.status(404).json({ error: "Dataset no encontrado" });
+    res.json(dataset);
+  } catch (err) {
+    console.error("get dataset error:", err);
+    res.status(500).json({ error: "Error" });
+  }
+});
+
+// Aprobar dataset por ID
+app.patch('/api/datasets/:id/approve', async (req, res) => {
+  try {
+    const ds = await approveDataSet(req.params.id);
+    res.json(ds);
+  } catch (e) {
+    const code = /no encontrado/i.test(e.message) ? 404 : 400;
+    res.status(code).json({ error: e.message });
+  }
+});
+
+// Eliminar dataset por ID
+app.patch('/api/datasets/:id/delete', async (req, res) => {
+  try {
+    const ds = await deleteDataSet(req.params.id);
+    res.json(ds);
+  } catch (e) {
+    const code = /no encontrado/i.test(e.message) ? 404 : 400;
+    res.status(code).json({ error: e.message });
+  }
+});
+
+
 //--------------Fin funciones de MongoDB-----------------------
 
 // Health check
@@ -746,6 +771,7 @@ app.get('/api/get_latest_message', async (req, res) => {
 /*Cassandra methods end here*/
 async function startServer() {
   try {
+    await connectMongo();
     await init_cassandra();
     app.listen(port, () => {
       console.log(`App running at http://localhost:${port}`);
