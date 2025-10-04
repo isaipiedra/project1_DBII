@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desktop</title>
+    <link rel="stylesheet" href="../styles/styles.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="shortcut icon" href="imgs/code-alt-regular-240.ico" type="image/x-icon">
+</head>
+<body class="desktop_body">
+    <nav class="user_info" id="user_info">
+        <div class="tooltip_right" id="tooltip_right">
+            <i class='bx bx-chevron-left'></i>
+        </div>
+
+        <div id="username_and_image">
+            <i class='bx bxs-user-circle' style='font-size: 60px;'></i>
+            <p>My username</p>
+        </div>
+
+        <div id="options_panel">
+            <a href="profile_settings.html"><i class='bx bxs-cog' title="Profile settings" id="setting_option"></i></a>
+            <a href="new_repository.html"><i class='bx bxs-plus-circle' title="Create a new repository" id="create_new_option"></i></a>
+            <i class='bx bxs-copy' title="Copy a repository" id="copy_option"></i>
+            <a href="login.html"><i class='bx bx-log-out-circle' title="Logout"></i></a>                     
+        </div>
+
+        <div id="repository_list">
+            <h2>Repositories</h2>
+            <ul>
+                <li class="repository_item"><a href="">Repository 1</a></li>
+                <li class="repository_item"><a href="">Repository 2</a></li>
+                <li class="repository_item"><a href="">Repository 3</a></li>         
+            </ul>
+        </div>
+    </nav>
+
+    <nav class="user_notifications" id="user_notifications">
+        <div class="tooltip_right" id="tooltip_right_notification">
+            <i class='bx bx-chevron-left'></i>
+        </div>
+
+        <div id="side_notification_header">
+            <h1>Notifications</h1>
+        </div>
+
+        <div id="notification_list">
+            <ul>
+                <li class="notification">
+                    <i class='bx bxs-user-circle' style='color:#ffffff; font-size: 50px;'></i>
+                    <div id="notification_iteminfo">
+                        <div id="notification_item_header">
+                            <h5>username1</h5>
+                            <div class="circle_notification"></div>
+                        </div>                        
+                        <p>just made a post</p>
+                    </div>
+                </li>                               
+            </ul>
+        </div>
+    </nav>
+
+    <section class="main_section">
+        <div id="search_tool">
+            <div id="user_info_menu">
+                <i class='bx bx-menu' id="menu_opener"></i>
+                <i class='bx bxs-bell' id="notification_opener"></i>
+            </div>
+
+            <h1>
+                Admin
+            </h1>
+
+            <div id="search_bar_section">
+                <input type="text" name="search_bar" id="search_bar">
+                <i class='bx bx-search'></i>
+            </div>            
+
+            <div id="user_inbox_menu">
+                <i class='bx bxs-chat'></i>
+            </div>
+        </div>
+
+        <div id="main_post_feed">
+            <div class="post">
+                <div class="post_header">
+                    <div class="post_header_userinfo">
+                        <i class='bx bxs-user-circle' style='color:#ffffff; font-size: 40px;'></i>
+                        <p>A username</p>
+                    </div>
+                    <div class="post_header_postinfo">
+                        <h5>3 files</h5>
+                        <p>12/10/2025</p>
+                    </div>                    
+                </div>
+                <div class="post_description">
+                    <h3>BDII Repository</h3>
+                    <p>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Ratione magni expedita dolores neque assumenda sit iusto dicta tenetur id officia.</p>
+                </div>
+                <div class="post_seemore">
+                    <a href="repository_info.html">
+                        <button class="seemore_btn">
+                            See more
+                        </button>
+                    </a>                    
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <aside class="side_inbox" id="side_inbox">
+        <div class="tooltip_left" id="tooltip_left">
+            <i class='bx bx-chevron-right'></i>
+        </div>
+
+        <div id="side_inbox_header">
+            <h1>Inbox</h1>
+        </div>
+
+        <div id="inbox_list">
+            <ul> 
+                <li class="inbox_notification">
+                    <i class='bx bxs-user-circle' style='color:#ffffff; font-size: 50px;'></i>
+                    <div id="inbox_iteminfo">
+                        <div id="inbox_item_header">
+                            <h5>username1</h5>
+                            <div class="circle_notification"></div>
+                        </div>                        
+                        <p>this is a place holder</p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </aside>
+
+    <!-- ONLY FOR MESSAGES -->
+    <div class="message_container">
+        <div class="message_box">
+            <div class="close_message_box">
+                <button id="close_message_btn"><i class="bx bx-x"></i></button>
+            </div>
+
+            <div class="title_message_box">
+                <h1>Clone</h1>
+            </div>
+
+            <div class="content_message_box">
+                <!-- EXAMPLE FOR MESSAGES WITH A PARAGRAPH (JUST ADD AS MANY P AS NEEDED) -->
+                <!-- <p> Lorem ipsum.</p> -->
+                
+                <!-- EXAMPLE FOR MESSAGES WITH LISTS, THE FIRST LI IS FOR HISTORY AND THE SECOND FOR CLONE -->
+                <!--     
+                    <ul>
+                        <li>
+                            <div>
+                                <i class="bx bxs-user-circle"></i>
+                                <p>user</p>
+                            </div>
+                            <div>
+                                12/7/2202
+                            </div>
+                        </li>
+                        <li>
+                            <p>repository 1</p>
+                        </li>
+                    </ul>
+                 -->
+                
+                <!-- EXAMPLE FOR MESSAGES WITH INPUTS (ADD AS MANY LABELS/INPUTS AS NEEDED) -->
+                <!-- 
+                    <label for="">LABEL</label>
+                    <input type="password" name="" id=""> 
+                -->
+            </div>
+
+            <div class="btns_message_box">
+                <button id="btn_message_primary">Click me</button>
+            </div>               
+        </div>
+        <div class="overlay"></div>
+    </div>
+</body>
+<script src="scripts/general-scripts.js"></script>
+<script src="scripts/desktop-scripts.js"></script>
+</html>
