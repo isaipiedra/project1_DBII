@@ -1,4 +1,4 @@
-import { createClient } from 'redis';
+﻿import { createClient } from 'redis';
 import bcrypt from 'bcryptjs';
 
 async function createAdminUser() {
