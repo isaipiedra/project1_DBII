@@ -18,6 +18,19 @@ import { init_cassandra,
   get_user_conversations, conversation_exists,send_message, get_conversation_messages, get_latest_message} 
   from './Cassandra/cassandra_methods.js';
 
+  /* MongoDB */
+  import { connectMongo,
+    getBucket,
+    insertDataSetGridFS,
+    DataSet,
+    approveDataSet,
+    deleteDataSet,
+    getDatasetById,
+    getDatasetsByName,
+    cloneDatasetById,
+    getApprovedDatasets,} from './Mongodb/mongodb.js';
+  import mongoose from 'mongoose';
+  import { GridFSBucket } from 'mongodb';
 
 const app = express();
 const port = process.env.API_PORT || 3000;
@@ -28,6 +41,143 @@ app.use(json({ limit: '10mb' })); // Aumentar de 100kb a 10mb
 app.use(express.static('public'));
 
 // Routes
+
+//--------------Inicio funciones de MongoDB--------------------
+
+// Insertar un nuevo dataset
+app.post('/api/add_dataset', async (req, res) => {
+  try {
+    const { 
+      name, 
+      description, 
+      author, 
+      status, 
+      size, 
+      avatarPath, 
+      descripcionPath, 
+      archivosPaths = [], 
+      videosPaths = [] 
+    } = req.body;
+
+    if (!name || !description || !author) {
+      return res.status(400).json({ error: "Faltan campos requeridos: 'name', 'description' o 'author'." });
+    }
+
+    const saved = await insertDataSetGridFS({
+      name,
+      description,
+      date: new Date(),
+      author,
+      status,
+      size,
+      avatarPath,
+      descripcionPath,
+      archivosPaths,
+      videosPaths
+    });
+
+    res.json(saved);
+
+  } catch (err) {
+    console.error("add_dataset error:", err);
+    res.status(500).json({ error: "Error insertando dataset" });
+  }
+});
+
+
+
+// Descargar archivo de GridFS
+app.get('/api/files/:fileId', (req, res) => {
+  try {
+    const { ObjectId } = mongoose.Types;
+    const fileId = new ObjectId(req.params.fileId);
+    const bucket = getBucket(); 
+
+    bucket.openDownloadStream(fileId)
+      .on('file', (file) => {
+        res.set({
+          'Content-Type': file.contentType || 'application/octet-stream',
+          'Content-Disposition': `inline; filename="${file.filename}"`
+        });
+      })
+      .on('error', () => res.status(404).json({ error: 'Archivo no encontrado' }))
+      .pipe(res);
+
+  } catch (e) {
+    res.status(400).json({ error: 'ID inválido' });
+  }
+});
+
+// Obtener dataset por ID
+app.get('/api/datasets/:id', async (req, res) => {
+  try {
+    const dataset = await DataSet.findById(req.params.id).lean();
+    if (!dataset) return res.status(404).json({ error: "Dataset no encontrado" });
+    res.json(dataset);
+  } catch (err) {
+    console.error("get dataset error:", err);
+    res.status(500).json({ error: "Error" });
+  }
+});
+
+// Aprobar dataset por ID
+app.patch('/api/:id/approve', async (req, res) => {
+  try {
+    const ds = await approveDataSet(req.params.id);
+    res.json(ds);
+  } catch (e) {
+    const code = /no encontrado/i.test(e.message) ? 404 : 400;
+    res.status(code).json({ error: e.message });
+  }
+});
+
+// Eliminar dataset por ID
+app.patch('/api/:id/delete', async (req, res) => {
+  try {
+    const ds = await deleteDataSet(req.params.id);
+    res.json(ds);
+  } catch (e) {
+    const code = /no encontrado/i.test(e.message) ? 404 : 400;
+    res.status(code).json({ error: e.message });
+  }
+});
+
+// Mostrar todos los datasets aprobados
+app.get('/api/datasets/approved', async (req, res) => {
+  try {
+    const limit = req.query.limit ? Number(req.query.limit) : 0; // 0 = sin límite
+    const skip  = req.query.skip  ? Number(req.query.skip)  : 0;
+    const data  = await getApprovedDatasets({ limit, skip });
+    res.json(data);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+//Buscar datasets por nombre
+app.get('/api/datasets/by-name', async (req, res) => {
+  try {
+    const { name } = req.query;
+    if (!name) return res.status(400).json({ error: "Falta 'name' en query" });
+
+    const exact           = req.query.exact === 'true';
+    const caseInsensitive = req.query.caseInsensitive !== 'false';
+    const limit           = req.query.limit ? Number(req.query.limit) : 20;
+    const skip            = req.query.skip  ? Number(req.query.skip)  : 0;
+
+    const results = await getDatasetsByName(name, {
+      exact,
+      caseInsensitive,
+      limit,
+      skip
+    });
+
+    res.json(results);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+//--------------Fin funciones de MongoDB-----------------------
 
 // Health check
 app.get('/health', async (req, res) => {
