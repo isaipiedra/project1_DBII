@@ -5,8 +5,8 @@ services:
     image: neo4j:latest
     container_name: neo4j
     ports:
-      - "7474:7474"  # HTTP
-      - "7687:7687"  # Bolt
+      - "7474:7474"  # Para unirse desde el programa Neo4j y la web
+      - "7687:7687"  # Para javaScript
     environment:
       - NEO4J_AUTH=neo4j/password123
       - NEO4J_dbms_memory_pagecache_size=1G
