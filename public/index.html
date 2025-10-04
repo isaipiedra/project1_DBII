@@ -20,5 +20,17 @@
 
     </footer>
 </body>
-<script src="scripts/front-scripts.js"></script>
+<script>
+    try {
+        if (sessionStorage.getItem() != null) {
+            if (sessionStorage.isLoggedIn() == true) {
+                window.location.href = 'desktop.html';
+            } else {
+                window.location.href = 'login.html';
+            }
+        }
+    } catch {
+        window.location.href = 'login.html';
+    }
+</script>
 </html>
