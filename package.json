@@ -4,24 +4,22 @@
   "description": "First programmed project for Databases II. Group 2. An app to share data.",
   "main": "app.js",
   "type": "module",
-  "type": "module",
   "scripts": {
     "start": "node app.js",
-    "dev": "nodemon app.js"
+    "dev": "nodemon app.js",
+    "create-admin": "node scripts/create-admin.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cassandra-driver": "^4.8.0",
     "cors": "^2.8.5",
-    "cassandra-driver": "^4.8.0",
     "dotenv": "^16.3.1",
     "express": "^5.1.0",
     "mongoose": "^8.19.0",
     "neo4j-driver": "^6.0.0",
-    "redis": "^4.6.7"
+    "redis": "^4.7.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
   }
 }
-

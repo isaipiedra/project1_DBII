@@ -10,6 +10,45 @@ class UserService {
     }
 
     // Validar campos requeridos
+    const { firstName, lastName, birthDate, password, profilePicture, admin } = userData;
+    if (!firstName || !lastName || !birthDate || !password) {
+      throw new Error('Todos los campos son requeridos');
+    }
+
+    // Encriptar contraseña
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    const userToSave = {
+      firstName,
+      lastName,
+      birthDate,
+      password: hashedPassword,
+      profilePicture: profilePicture || null,
+      admin: admin || false, // Default to false if not provided
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    await redisClient.setUser(username, userToSave);
+
+    return {
+      username,
+      firstName,
+      lastName,
+      birthDate,
+      profilePicture: userToSave.profilePicture,
+      admin: userToSave.admin
+    };
+  }
+
+  async createAdminUser(username, userData) {
+    // Validar que el usuario no exista
+    const existingUser = await redisClient.getUser(username);
+    if (existingUser) {
+      throw new Error('El usuario ya existe');
+    }
+
+    // Validar campos requeridos
     const { firstName, lastName, birthDate, password, profilePicture } = userData;
     if (!firstName || !lastName || !birthDate || !password) {
       throw new Error('Todos los campos son requeridos');
@@ -23,7 +62,8 @@ class UserService {
       lastName,
       birthDate,
       password: hashedPassword,
-      profilePicture: profilePicture || null, // Guardar la imagen en base64
+      profilePicture: profilePicture || null,
+      admin: true, // Always set to true for admin users
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -35,7 +75,8 @@ class UserService {
       firstName,
       lastName,
       birthDate,
-      profilePicture: userToSave.profilePicture
+      profilePicture: userToSave.profilePicture,
+      admin: true
     };
   }
 
@@ -64,6 +105,7 @@ class UserService {
       lastName: updateData.lastName || existingUser.lastName,
       birthDate: updateData.birthDate || existingUser.birthDate,
       profilePicture: updateData.profilePicture !== undefined ? updateData.profilePicture : existingUser.profilePicture,
+      admin: updateData.admin !== undefined ? updateData.admin : existingUser.admin,
       password: existingUser.password,
       createdAt: existingUser.createdAt,
       updatedAt: new Date().toISOString()
@@ -104,6 +146,48 @@ class UserService {
     };
   }
 
+  async promoteToAdmin(username) {
+    const existingUser = await redisClient.getUser(username);
+    if (!existingUser) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    const updatedUser = {
+      ...existingUser,
+      admin: true,
+      updatedAt: new Date().toISOString()
+    };
+
+    await redisClient.setUser(username, updatedUser);
+
+    const { password, ...userWithoutPassword } = updatedUser;
+    return {
+      username,
+      ...userWithoutPassword
+    };
+  }
+
+  async demoteFromAdmin(username) {
+    const existingUser = await redisClient.getUser(username);
+    if (!existingUser) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    const updatedUser = {
+      ...existingUser,
+      admin: false,
+      updatedAt: new Date().toISOString()
+    };
+
+    await redisClient.setUser(username, updatedUser);
+
+    const { password, ...userWithoutPassword } = updatedUser;
+    return {
+      username,
+      ...userWithoutPassword
+    };
+  }
+
   async deleteUser(username) {
     const existingUser = await redisClient.getUser(username);
     if (!existingUser) {
@@ -121,6 +205,16 @@ class UserService {
     return users.map(user => {
       const { password, ...userWithoutPassword } = user;
       return userWithoutPassword;
+    });
+  }
+
+  async getAdmins() {
+    const admins = await redisClient.getAdmins();
+    
+    // Remover contraseñas de todos los administradores
+    return admins.map(admin => {
+      const { password, ...adminWithoutPassword } = admin;
+      return adminWithoutPassword;
     });
   }
 
@@ -144,6 +238,10 @@ class UserService {
 
   async userExists(username) {
     return await redisClient.userExists(username);
+  }
+
+  async isAdmin(username) {
+    return await redisClient.isAdmin(username);
   }
 }
 

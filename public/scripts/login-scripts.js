@@ -106,9 +106,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 sessionStorage.setItem('currentUser', username);
                 sessionStorage.setItem('isLoggedIn', 'true');
                 sessionStorage.setItem('userData', JSON.stringify(result.user));
+                sessionStorage.setItem('isAdmin', result.user.admin ? 'true' : 'false');
                 
-                // Redirigir
-                window.location.href = 'desktop.html';
+                // Redirigir basado en el rol del usuario
+                setTimeout(() => {
+                    if (result.user.admin === true) {
+                        window.location.href = 'admin/desktop.html';
+                    } else {
+                        window.location.href = 'desktop.html';
+                    }
+                }, 1000);
                 
             } else {
                 // Error de autenticación
@@ -184,18 +191,31 @@ function getUserData() {
     return userData ? JSON.parse(userData) : null;
 }
 
+// Utility function to check if user is admin
+function isAdminUser() {
+    return sessionStorage.getItem('isAdmin') === 'true';
+}
+
 // Utility function to logout
 function logout() {
     sessionStorage.removeItem('currentUser');
     sessionStorage.removeItem('isLoggedIn');
     sessionStorage.removeItem('userData');
+    sessionStorage.removeItem('isAdmin');
     window.location.href = 'login.html';
 }
 
-// Verificar si ya está logueado y redirigir a desktop
+// Verificar si ya está logueado y redirigir a la página correcta
 function checkAndRedirect() {
-    if (checkLoginStatus() && window.location.pathname.includes('login.html')) {
-        window.location.href = 'desktop.html';
+    if (checkLoginStatus()) {
+        if (window.location.pathname.includes('login.html')) {
+            // Redirigir a la página correcta basada en el rol
+            if (isAdminUser()) {
+                window.location.href = 'admin/desktop.html';
+            } else {
+                window.location.href = 'desktop.html';
+            }
+        }
     }
 }
 
@@ -203,6 +223,19 @@ function checkAndRedirect() {
 function requireAuth() {
     if (!checkLoginStatus()) {
         window.location.href = 'login.html';
+        return false;
+    }
+    return true;
+}
+
+// Proteger páginas de admin
+function requireAdminAuth() {
+    if (!checkLoginStatus()) {
+        window.location.href = '../login.html';
+        return false;
+    }
+    if (!isAdminUser()) {
+        window.location.href = '../desktop.html';
         return false;
     }
     return true;

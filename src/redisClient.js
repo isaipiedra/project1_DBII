@@ -123,6 +123,46 @@ class RedisClient {
     }
   }
 
+  async getAdmins() {
+    await this.ensureConnection();
+    try {
+      const keys = await this.client.keys('*');
+      const admins = [];
+
+      for (const key of keys) {
+        const userData = await this.client.get(key);
+        if (userData) {
+          const user = JSON.parse(userData);
+          if (user.admin === true) {
+            admins.push({
+              username: key,
+              ...user
+            });
+          }
+        }
+      }
+
+      return admins;
+    } catch (error) {
+      console.error('Error obteniendo administradores:', error);
+      throw error;
+    }
+  }
+
+  async isAdmin(username) {
+    await this.ensureConnection();
+    try {
+      const userData = await this.client.get(username);
+      if (!userData) return false;
+      
+      const user = JSON.parse(userData);
+      return user.admin === true;
+    } catch (error) {
+      console.error('Error verificando administrador:', error);
+      throw error;
+    }
+  }
+
   async ping() {
     await this.ensureConnection();
     try {

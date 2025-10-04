@@ -16,7 +16,7 @@ import { init_cassandra,
   add_dataset_vote, get_votes_by_dataset, get_votes_by_user,
   record_new_download, get_downloads_by_dataset, start_conversation,
   get_user_conversations, conversation_exists,send_message, get_conversation_messages, get_latest_message} 
-  from './Cassandra/cassandra_methods.js';
+  from './Databases/Cassandra/cassandra_methods.js';
 
   /* MongoDB */
   import { connectMongo,
@@ -27,7 +27,7 @@ import { init_cassandra,
     deleteDataSet,
     getDatasetsByName,
     cloneDatasetById,
-    getApprovedDatasets,} from './Mongodb/mongodb.js';
+    getApprovedDatasets,} from './Databases/Mongodb/mongodb.js';
   import mongoose from 'mongoose';
   import { GridFSBucket } from 'mongodb';
 
@@ -222,6 +222,7 @@ app.get('/health', async (req, res) => {
   }
 });
 
+// ---------------------- Funciones de Redis ----------------------
 // Crear usuario
 app.post('/users/:username', async (req, res) => {
   try {
@@ -410,6 +411,105 @@ app.put('/users/:username/profile-picture', async (req, res) => {
   }
 });
 
+// Crear usuario admin
+app.post('/admin/users/:username', async (req, res) => {
+  try {
+    const { username } = req.params;
+    const userData = req.body;
+
+    const result = await userService.createAdminUser(username, userData);
+
+    res.status(201).json({
+      message: 'Usuario administrador creado exitosamente',
+      user: result
+    });
+
+  } catch (error) {
+    console.error('Error creando usuario administrador:', error.message);
+    
+    if (error.message === 'El usuario ya existe') {
+      return res.status(409).json({ error: error.message });
+    }
+    if (error.message === 'Todos los campos son requeridos') {
+      return res.status(400).json({ error: error.message });
+    }
+    
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Promover usuario a administrador
+app.post('/users/:username/promote', async (req, res) => {
+  try {
+    const { username } = req.params;
+
+    const result = await userService.promoteToAdmin(username);
+
+    res.json({
+      message: 'Usuario promovido a administrador exitosamente',
+      user: result
+    });
+
+  } catch (error) {
+    console.error('Error promoviendo usuario:', error.message);
+    
+    if (error.message === 'Usuario no encontrado') {
+      return res.status(404).json({ error: error.message });
+    }
+    
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Degradar usuario de administrador
+app.post('/users/:username/demote', async (req, res) => {
+  try {
+    const { username } = req.params;
+
+    const result = await userService.demoteFromAdmin(username);
+
+    res.json({
+      message: 'Usuario degradado de administrador exitosamente',
+      user: result
+    });
+
+  } catch (error) {
+    console.error('Error degradando usuario:', error.message);
+    
+    if (error.message === 'Usuario no encontrado') {
+      return res.status(404).json({ error: error.message });
+    }
+    
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Obtener todos los administradores
+app.get('/admins', async (req, res) => {
+  try {
+    const admins = await userService.getAdmins();
+    res.json(admins);
+
+  } catch (error) {
+    console.error('Error listando administradores:', error.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Verificar si un usuario es administrador
+app.get('/users/:username/is-admin', async (req, res) => {
+  try {
+    const { username } = req.params;
+
+    const isAdmin = await userService.isAdmin(username);
+    res.json({ username, isAdmin });
+
+  } catch (error) {
+    console.error('Error verificando administrador:', error.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 // Manejo de errores
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -421,7 +521,9 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada' });
 });
 
-/*Cassandra methods start here*/
+
+//------------- Cassandra methods start here -------------
+
 app.post('/api/add_comment', async (req, res)=> {  
   try{
     const {id_dataset, user_name, comment, visible} = req.body || {};  
