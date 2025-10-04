@@ -23,7 +23,7 @@
             <a href="profile_settings.html"><i class='bx bxs-cog' title="Profile settings" id="setting_option"></i></a>
             <a href="new_repository.html"><i class='bx bxs-plus-circle' title="Create a new repository" id="create_new_option"></i></a>
             <i class='bx bxs-copy' title="Copy a repository" id="copy_option"></i>
-            <a href="login.html"><i class='bx bx-log-out-circle' title="Logout"></i></a>                     
+            <i class='bx bx-log-out-circle' title="Logout" id="logout_option"></i>                 
         </div>
 
         <div id="repository_list">
@@ -56,7 +56,7 @@
             <div>
                 <a href="desktop.html"><i class='bx bx-chevron-left' id="user_back_arrow"></i></a>
             </div>
-            <i class="bx bxs-user-circle"></i>
+            <img id="user_pfp" src="" alt="user_profilepicture" width="150">
             <input type="text" value="User name" id="user_name" disabled>
             <i class="bx bxs-pencil" id="edit_user_name"></i>
         </section>
@@ -81,14 +81,12 @@
 
             <article class="user_personal_info">
                 <div id="user_information">
-                    <label for="user_name">Name:</label>
-                    <input type="text" name="user_name" id="user_name" placeholder="First name">
-                    <label for="user_name">Middle name:</label>
-                    <input type="text" name="user_name" id="user_name" placeholder="Middle name">
-                    <label for="user_name">Last name:</label>
-                    <input type="text" name="user_name" id="user_name" placeholder="Last name">
-                    <label for="user_name">Birth date:</label>
-                    <input type="date" name="user_name" id="user_name" placeholder="Last name">
+                    <label for="user_firstname">Name:</label>
+                    <input type="text" name="user_firstname" id="user_firstname" placeholder="First name">
+                    <label for="user_lastname">Last name:</label>
+                    <input type="text" name="user_lastname" id="user_lastname" placeholder="Last name">
+                    <label for="user_birthdate">Birth date:</label>
+                    <input type="date" name="user_birthdate" id="user_birthdate">
                 </div>
                 <div id="user_info_btns">
                     <button id="change_password_btn"><i class="bx bxs-key"></i> Change password</button>
