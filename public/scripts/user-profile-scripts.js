@@ -100,19 +100,15 @@ function updateUserSummary(userData) {
     userSummary.innerHTML = `
         <ul>
             <li>
-                <h1>Name: </h1>
+                <h1>First Name: </h1>
                 <p>${escapeHtml(userData.firstName || 'Not specified')}</p>
             </li>
             <li>
-                <h1>Middle name: </h1>
-                <p>${escapeHtml(userData.middleName || 'Not specified')}</p>
-            </li>
-            <li>
-                <h1>Last name: </h1>
+                <h1>Last Name: </h1>
                 <p>${escapeHtml(userData.lastName || 'Not specified')}</p>
             </li>
             <li>
-                <h1>Birth date: </h1>
+                <h1>Birth Date: </h1>
                 <p>${escapeHtml(userData.birthDate || 'Not specified')}</p>
             </li>
             <li>
