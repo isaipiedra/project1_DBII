@@ -38,3 +38,10 @@ menu_opener.addEventListener('click', () => {
     user_info.style = 'display:flex';
     user_info_menu.style = 'visibility:hidden';
 });
+
+/* --------- SIDEBAR INFO ---------- */
+const username = document.querySelector('#username');
+const user_profilepicture = document.querySelector('#user_profilepicture');
+
+username.innerHTML = sessionStorage.currentUser;
+user_profilepicture.src = JSON.parse(sessionStorage.userData).profilePicture;

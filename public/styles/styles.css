@@ -220,6 +220,10 @@ html {
     justify-content: space-around;
 }
 
+#username_and_image img {
+    border-radius: 50%;
+}
+
 /* OPTIONS PANEL */
 #options_panel{
     display: flex;
