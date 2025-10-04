@@ -8,7 +8,9 @@ import { init_cassandra,
   update_comment_visibility, reply_comment,
   get_comment_replies, update_reply_visibility,
   add_dataset_vote, get_votes_by_dataset, get_votes_by_user,
-  record_new_download, get_downloads_by_dataset} from './Cassandra/cassandra_methods.js';
+  record_new_download, get_downloads_by_dataset, start_conversation,
+  get_user_conversations, conversation_exists,send_message, get_conversation_messages} 
+  from './Cassandra/cassandra_methods.js';
 
 
 const app = express();
@@ -254,6 +256,90 @@ app.get('/api/get_downloads_by_dataset', async (req, res) => {
   } catch (error) {
     console.error("get_downloads_by_dataset:", error);
     res.status(500).json({ error: "Error" });
+  }
+});
+
+
+/**Conversation ---------------------------------------------------------------------- */
+app.post('/api/start_conversation', async (req, res) => {
+  try {
+    const { id_user_one, id_user_two, user_one_name, user_two_name } = req.body;
+    
+    if (!id_user_one || !id_user_two || !user_one_name || !user_two_name) {
+      return res.status(400).json({ 
+        error: "Faltan campos requeridos: 'id_user_one', 'id_user_two', 'user_one_name', 'user_two_name'" 
+      });
+    }
+    
+    const existing = await conversation_exists(id_user_one, id_user_two);
+    if (existing.exists) {
+      return res.status(200).json({ 
+        message: "La conversación ya existe",
+        id_conversation: existing.id_conversation
+      });
+    }
+    
+    const result = await start_conversation({id_user_one, id_user_two,user_one_name, user_two_name
+    });
+    
+    res.json(result);
+    
+  } catch (error) {
+    console.error("start_conversation error:", error);
+    res.status(500).json({ error: "Error al iniciar conversación" });
+  }
+});
+
+app.get('/api/get_user_conversations', async (req, res) => {
+  try {
+    const { id_user } = req.query;
+    
+    if (!id_user) {
+      return res.status(400).json({ error: "Falta 'id_user'" });
+    }
+    
+    const conversations = await get_user_conversations(id_user);
+    res.json(conversations);
+    
+  } catch (error) {
+    console.error("get_user_conversations error:", error);
+    res.status(500).json({ error: "Error" });
+  }
+});
+
+app.post('/api/send_message', async (req, res) => {
+  try {
+    const { id_conversation, id_user, message } = req.body;
+    
+    if (!id_conversation || !id_user || !message) {
+      return res.status(400).json({ 
+        error: "Faltan campos requeridos: 'id_conversation', 'id_user', 'message'" 
+      });
+    }
+    
+    const result = await send_message({ id_conversation, id_user, message });
+    res.json(result);
+    
+  } catch (error) {
+    console.error("send_message error:", error);
+    res.status(500).json({ error: "Error al enviar mensaje" });
+  }
+});
+
+app.get('/api/get_conversation_messages', async (req, res) => {
+  try {
+    const { id_conversation } = req.query;
+    
+    if (!id_conversation) {
+      return res.status(400).json({ error: "Falta 'id_conversation'" });
+    }
+    
+    const messages = await get_conversation_messages(id_conversation);
+    res.json(messages);
+    
+  } catch (error) {
+    console.error("get_conversation_messages error:", error);
+    res.status(500).json({ error: "Error al obtener mensajes" });
   }
 });
 

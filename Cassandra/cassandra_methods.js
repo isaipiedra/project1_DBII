@@ -301,6 +301,113 @@ export async function get_downloads_by_dataset(dataset_id) {
   return result.rows;
 }
 
+/*Messages-------------------------------------------------------------------------------- */
+/**Function which starts a conversation*/
+export async function start_conversation({ id_user_one, id_user_two, user_one_name, user_two_name }) {
+  const id_conversation = types.TimeUuid.now();
+  
+  const queries = [
+    {
+      query: `
+        INSERT INTO user_conversation (id_user_one, id_user_two, id_conversation, user_one_name, user_two_name)
+        VALUES (?, ?, ?, ?, ?)
+      `,
+      params: [id_user_one, id_user_two, id_conversation, user_one_name, user_two_name]
+    },
+    {
+      query: `
+        INSERT INTO conversation_by_user (id_user_one, id_conversation, id_user_two, user_two_name)
+        VALUES (?, ?, ?, ?)
+      `,
+      params: [id_user_one, id_conversation, id_user_two, user_two_name]
+    },
+    {
+      query: `
+        INSERT INTO conversation_by_user (id_user_one, id_conversation, id_user_two, user_two_name)
+        VALUES (?, ?, ?, ?)
+      `,
+      params: [id_user_two, id_conversation, id_user_one, user_one_name]
+    }
+  ];
+  
+  await client.batch(queries, { prepare: true });
+  
+  return {id_conversation: id_conversation.toString(), id_user_one,id_user_two,user_one_name,user_two_name,created_at: id_conversation.getDate().toISOString()
+  };
+}
+
+/**Function which returns all the conversation of an user using it's id as reference */
+export async function get_user_conversations(id_user) {
+  const query = `
+    SELECT id_user_one, id_conversation, id_user_two, user_two_name
+    FROM conversation_by_user
+    WHERE id_user_one = ?
+    ORDER BY id_conversation DESC
+  `;
+  
+  const result = await client.execute(query, [id_user], { prepare: true });
+  
+  return result.rows.map(row => ({
+    id_conversation: row.id_conversation.toString(),
+    id_user_one: row.id_user_one,
+    id_user_two: row.id_user_two,
+    user_two_name: row.user_two_name,
+    created_at: row.id_conversation.getDate().toISOString()
+  }));
+}
+/**Function which seeks if a conversation between two users already exists, returning the id
+ * of the conversation. It uses both user_one and user_two id's.
+ */
+export async function conversation_exists(id_user_one, id_user_two) {
+  const query = `
+    SELECT id_conversation
+    FROM user_conversation
+    WHERE id_user_one = ? AND id_user_two = ?
+  `;
+  
+  const result = await client.execute(query, [id_user_one, id_user_two], { prepare: true });
+  
+  if (result.rows.length > 0) {
+    return {
+      exists: true,
+      id_conversation: result.rows[0].id_conversation.toString()
+    };
+  }
+  
+  return { exists: false };
+}
+
+export async function send_message({ id_conversation, id_user, message }) {
+  const id_conversation_uuid = types.TimeUuid.fromString(id_conversation);
+  const id_message = types.TimeUuid.now();
+  
+  const query = `
+    INSERT INTO conversation_message (id_conversation, id_message, id_user, message)
+    VALUES (?, ?, ?, ?)
+  `;
+  
+  await client.execute(query, [id_conversation_uuid, id_message, id_user, message], { prepare: true });
+  
+  return {id_conversation,id_message: id_message.toString(),id_user,message, sent_at: id_message.getDate().toISOString()
+  };
+}
+
+export async function get_conversation_messages(id_conversation) {
+  const id_conversation_uuid = types.TimeUuid.fromString(id_conversation);
+  
+  const query = `
+    SELECT id_conversation, id_message, id_user, message
+    FROM conversation_message
+    WHERE id_conversation = ?
+  `;
+  
+  const result = await client.execute(query, [id_conversation_uuid], { prepare: true });
+  
+  return result.rows.map(row => ({id_conversation: row.id_conversation.toString(),id_message: row.id_message.toString(),
+    id_user: row.id_user,message: row.message, sent_at: row.id_message.getDate().toISOString()
+  }));
+}
+
 /**const query = 'SELECT * FROM COMMENT_DS';
 
 client.execute(query).then(result => {
