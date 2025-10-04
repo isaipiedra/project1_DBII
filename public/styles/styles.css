@@ -1816,4 +1816,179 @@ html {
     transition: 0.2s ease;
 }
 
-/* -------------------- -------------- -------------------- */
+/* ----------------------- USER MANAGEMENT ----------------------- */
+#user_management_main {
+    flex: 1;
+    padding: 2em 3em;
+    overflow-y: auto;
+}
+
+.user_management_header {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 2em;
+    border-bottom: 2px solid var(--lighter-purple);
+    padding-bottom: 1em;
+}
+
+.user_management_header h1 {
+    font-size: 36px;
+    margin-bottom: 0.5em;
+}
+
+.user_tabs {
+    display: flex;
+    gap: 1em;
+}
+
+.tab_btn {
+    background-color: var(--secondary-background);
+    border: none;
+    padding: 0.75em 1.5em;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+.tab_btn.active {
+    background-color: var(--lighter-purple);
+    color: var(--input-text);
+}
+
+.tab_btn:hover:not(.active) {
+    background-color: var(--hover-light-gray);
+}
+
+.user_tab_content {
+    display: none;
+}
+
+.user_tab_content.active {
+    display: block;
+}
+
+.user_list_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5em;
+    padding-bottom: 0.5em;
+    border-bottom: 1px solid var(--lighter-purple);
+}
+
+.user_list_header h2 {
+    font-size: 24px;
+    margin: 0;
+}
+
+.user_count {
+    background-color: var(--lighter-purple);
+    color: var(--input-text);
+    padding: 0.25em 0.75em;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.user_list {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+}
+
+.user_card {
+    background-color: var(--secondary-background);
+    border-radius: 8px;
+    padding: 1.5em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.user_card:hover {
+    background-color: var(--hover-light-gray);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.user_card.admin {
+    border-left: 4px solid var(--yellow);
+}
+
+.user_card.normal {
+    border-left: 4px solid var(--light-purple);
+}
+
+.user_info_main {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+}
+
+.user_info_main i {
+    font-size: 50px;
+    color: var(--light-purple);
+}
+
+.user_details h3 {
+    margin: 0 0 0.25em 0;
+    font-size: 20px;
+}
+
+.user_details p {
+    margin: 0;
+    color: var(--lighter-purple);
+    font-size: 14px;
+}
+
+.user_actions {
+    display: flex;
+    gap: 0.5em;
+}
+
+.action_btn {
+    background-color: transparent;
+    border: none;
+    border-radius: 4px;
+    padding: 0.5em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.promote_btn {
+    color: var(--download-button);
+}
+
+.promote_btn:hover {
+    background-color: var(--download-button);
+    color: var(--white);
+}
+
+.demote_btn {
+    color: var(--yellow);
+}
+
+.demote_btn:hover {
+    background-color: var(--yellow);
+    color: var(--input-text);
+}
+
+.delete_btn {
+    color: var(--delete-button);
+}
+
+.delete_btn:hover {
+    background-color: var(--delete-button);
+    color: var(--white);
+}
+
+.action_btn i {
+    font-size: 20px;
+}
+
+/* ----------------------- ------- ----------------------- */
