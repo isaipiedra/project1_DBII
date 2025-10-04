@@ -1,0 +1,20 @@
+# MongoDB
+Databases/
+MongoDB/data/
+
+# Redis  
+Databases/redis/data/
+
+# Node.js
+node_modules/
+.env
+
+# Database files (general)
+*.wt
+*.turtle
+WiredTiger*
+mongod.lock
+storage.bson
+journal/
+diagnostic.data/
+.mongodb/
