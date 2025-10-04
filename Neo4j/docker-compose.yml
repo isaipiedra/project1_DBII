@@ -2,20 +2,28 @@ version: '3.8'
 
 services:
   neo4j:
-    image: neo4j:5.22
+    image: neo4j:latest
     container_name: neo4j
-    restart: always
     ports:
-      - "7474:7474"   # Conectarse desde la web
-      - "7687:7687"   # Concetarse desde javascript
+      - "7474:7474"  # HTTP
+      - "7687:7687"  # Bolt
     environment:
-      - NEO4J_AUTH=neo4j/test123
+      - NEO4J_AUTH=neo4j/password123
+      - NEO4J_dbms_memory_pagecache_size=1G
+      - NEO4J_dbms_memory_heap_initial__size=1G
+      - NEO4J_dbms_memory_heap_max__size=1G
+      # Configuración APOC
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+      - NEO4J_dbms_security_procedures_allowlist=apoc.*
       - NEO4JLABS_PLUGINS=["apoc"]
-      - NEO4J_apoc_export_file_enabled=true
-      - NEO4J_apoc_import_file_enabled=true
-      - NEO4J_apoc_import_file_use__neo4j__config=true
     volumes:
-      - ./neo4j/data:/data
-      - ./neo4j/logs:/logs
-      - ./neo4j/import:/var/lib/neo4j/import
-      - ./neo4j/plugins:/plugins
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      - neo4j_import:/var/lib/neo4j/import
+      - neo4j_plugins:/plugins
+
+volumes:
+  neo4j_data:
+  neo4j_logs:
+  neo4j_import:
+  neo4j_plugins:
