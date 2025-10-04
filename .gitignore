@@ -1,12 +1,16 @@
+# Databases
+#Databases/
+
+# Node.js
 node_modules/
-
-# Datos de bases de datos
-Databases/
-
-# Archivos de entorno local
 .env
 
-# Logs y archivos temporales
-*.log
-.DS_Store
-Thumbs.db
+# Database files (general)
+*.wt
+*.turtle
+WiredTiger*
+mongod.lock
+storage.bson
+journal/
+diagnostic.data/
+.mongodb/
