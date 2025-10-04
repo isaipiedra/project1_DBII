@@ -1,11 +1,11 @@
 #!/usr/bin/env pwsh
 <#
 .SYNOPSIS
-    Script de configuración automática para MongoDB y Redis en Docker
+    Script de configuración automática para MongoDB y Redis Cluster en Docker
 
 .DESCRIPTION
     Este script automatiza la creación de la estructura de carpetas, archivos de configuración
-    y ejecución de los contenedores Docker para el proyecto.
+    y ejecución de los contenedores Docker para el proyecto con Redis Cluster de 2 nodos.
 
 .PARAMETER Init
     Inicia todos los servicios
@@ -90,13 +90,15 @@ function Initialize-DirectoryStructure {
         Write-ColorOutput "Directorio creado: Databases/mongo" "Green"
     }
     
-    # Estructura para Redis
+    # Estructura para Redis Replication
     $redisDir = Join-Path $DatabasesDir "redis"
     $redisDataDir = Join-Path $redisDir "data"
     
     if (-not (Test-Path $redisDir)) {
         New-Item -ItemType Directory -Force -Path $redisDir | Out-Null
         New-Item -ItemType Directory -Force -Path $redisDataDir | Out-Null
+        New-Item -ItemType Directory -Force -Path (Join-Path $redisDataDir "master") | Out-Null
+        New-Item -ItemType Directory -Force -Path (Join-Path $redisDataDir "replica") | Out-Null
         Write-ColorOutput "Directorio creado: Databases/redis" "Green"
     }
     
@@ -190,88 +192,44 @@ networks:
     }
 }
 
-function Create-RedisFiles {
+function Create-RedisClusterFiles {
     $redisDir = Join-Path $DatabasesDir "redis"
     
-    # redis.conf - SIN BOM
-    $redisConf = @'
+    # Configuración para Redis Master
+    $redisMasterConf = @'
 bind 0.0.0.0
 port 6379
-
-# Persistencia RDB
-save 900 1
-save 300 10  
-save 60 10000
-stop-writes-on-bgsave-error no
-rdbcompression yes
-rdbchecksum yes
-dbfilename dump.rdb
-dir /data
-
-# Persistencia AOF
 appendonly yes
 appendfilename "appendonly.aof"
 appendfsync everysec
-no-appendfsync-on-rewrite no
-auto-aof-rewrite-percentage 100
-auto-aof-rewrite-min-size 64mb
-
-# Memoria
-maxmemory 512mb
-maxmemory-policy allkeys-lru
-
-# Logs
-loglevel notice
-logfile ""
-
-# Conexiones
-timeout 0
-tcp-keepalive 300
+dir /data
+requirepass ""
+masterauth ""
 '@
 
-    if (-not (Test-Path (Join-Path $redisDir "redis.conf"))) {
-        # Guardar sin BOM usando UTF-8 sin BOM
-        $utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $false
-        [System.IO.File]::WriteAllText((Join-Path $redisDir "redis.conf"), $redisConf, $utf8NoBomEncoding)
-        Write-ColorOutput "Archivo creado: Databases/redis/redis.conf (sin BOM)" "Green"
-    } else {
-        # Si el archivo existe, reemplazarlo sin BOM
-        $utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $false
-        [System.IO.File]::WriteAllText((Join-Path $redisDir "redis.conf"), $redisConf, $utf8NoBomEncoding)
-        Write-ColorOutput "Archivo actualizado: Databases/redis/redis.conf (sin BOM)" "Green"
-    }
-    
-    # docker-compose.yml para Redis - CORREGIDO
-    $redisCompose = @'
-services:
-  redis:
-    image: redis:7.2-alpine
-    container_name: redis
-    hostname: redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - ./data:/data
-      - ./redis.conf:/usr/local/etc/redis/redis.conf
-    command: redis-server /usr/local/etc/redis/redis.conf
-    restart: unless-stopped
-    networks:
-      - db-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-networks:
-  db-network:
-    driver: bridge
+    # Configuración para Redis Replica
+    $redisReplicaConf = @'
+bind 0.0.0.0
+port 6379
+appendonly yes
+appendfilename "appendonly.aof"
+appendfsync everysec
+dir /data
+requirepass ""
+masterauth ""
+replica-read-only yes
 '@
 
-    if (-not (Test-Path (Join-Path $redisDir "docker-compose.yml"))) {
-        $redisCompose | Out-File -FilePath (Join-Path $redisDir "docker-compose.yml") -Encoding UTF8
-        Write-ColorOutput "Archivo creado: Databases/redis/docker-compose.yml" "Green"
-    }
+    # Crear configuración para master
+    $redisMasterConfPath = Join-Path $redisDir "redis-master.conf"
+    $utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $false
+    [System.IO.File]::WriteAllText($redisMasterConfPath, $redisMasterConf, $utf8NoBomEncoding)
+    Write-ColorOutput "Archivo creado: Databases/redis/redis-master.conf" "Green"
+
+    # Crear configuración para replica
+    $redisReplicaConfPath = Join-Path $redisDir "redis-replica.conf"
+    [System.IO.File]::WriteAllText($redisReplicaConfPath, $redisReplicaConf, $utf8NoBomEncoding)
+    Write-ColorOutput "Archivo creado: Databases/redis/redis-replica.conf" "Green"
 }
 
 function Create-GlobalCompose {
@@ -312,16 +270,16 @@ services:
       timeout: 3s
       retries: 30
 
-  # Redis Service
-  redis:
+  # Redis Master Node
+  redis-master:
     image: redis:7.2-alpine
-    container_name: redis
-    hostname: redis
+    container_name: redis-master
+    hostname: redis-master
     ports:
       - "6379:6379"
     volumes:
-      - ./redis/data:/data
-      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./redis/data/master:/data
+      - ./redis/redis-master.conf:/usr/local/etc/redis/redis.conf
     command: redis-server /usr/local/etc/redis/redis.conf
     networks:
       - db-network
@@ -330,7 +288,31 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
-    restart: unless-stopped
+
+  # Redis Replica Node
+  redis-replica:
+    image: redis:7.2-alpine
+    container_name: redis-replica
+    hostname: redis-replica
+    ports:
+      - "6380:6379"
+    volumes:
+      - ./redis/data/replica:/data
+      - ./redis/redis-replica.conf:/usr/local/etc/redis/redis.conf
+    command: >
+      sh -c "
+      sleep 10 &&
+      redis-server /usr/local/etc/redis/redis.conf --replicaof redis-master 6379
+      "
+    depends_on:
+      - redis-master
+    networks:
+      - db-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   # Replica Set Initialization
   rs-init:
@@ -370,20 +352,32 @@ networks:
     driver: bridge
 '@
 
-    if (-not (Test-Path (Join-Path $DatabasesDir "global-compose.yml"))) {
-        $globalCompose | Out-File -FilePath (Join-Path $DatabasesDir "global-compose.yml") -Encoding UTF8
-        Write-ColorOutput "Archivo creado: Databases/global-compose.yml" "Green"
-    }
+    $globalComposePath = Join-Path $DatabasesDir "global-compose.yml"
+    $globalCompose | Out-File -FilePath $globalComposePath -Encoding UTF8 -Force
+    Write-ColorOutput "Archivo actualizado: Databases/global-compose.yml (Redis Replication)" "Green"
 }
 
 function Create-EnvironmentFiles {
     # .env.example en la raíz del proyecto
     $envExample = @'
+# MongoDB Configuration
 MONGO_URI=mongodb://localhost:27017/?replicaSet=rs0
-REDIS_URL=redis://localhost:6379
-REDIS_HOST=localhost
-REDIS_PORT=6379
+
+# Redis Cluster Configuration
+REDIS_CLUSTER_HOSTS=localhost:6379,localhost:6380
+REDIS_URL=redis://localhost:6379,localhost:6380
+
+# Individual Redis nodes (for development)
+REDIS1_HOST=localhost
+REDIS1_PORT=6379
+REDIS2_HOST=localhost
+REDIS2_PORT=6380
+
+# Application Configuration
 API_PORT=3000
+
+# Redis Cluster aware client configuration
+REDIS_CLUSTER=true
 '@
 
     if (-not (Test-Path (Join-Path $ProjectRoot ".env.example"))) {
@@ -418,7 +412,7 @@ function Initialize-Environment {
     
     Initialize-DirectoryStructure
     Create-MongoDBFiles
-    Create-RedisFiles
+    Create-RedisClusterFiles
     Create-GlobalCompose
     Create-EnvironmentFiles
 }
@@ -435,21 +429,11 @@ function Start-Services {
     # Inicializar entorno
     Initialize-Environment
     
-    # Verificar que Redis esté configurado correctamente
-    $redisConfPath = Join-Path $DatabasesDir "redis/redis.conf"
-    if (Test-Path $redisConfPath) {
-        $redisConfContent = Get-Content $redisConfPath -Raw
-        if ($redisConfContent -notmatch "appendonly yes") {
-            Write-ColorOutput "ADVERTENCIA: Redis no tiene persistencia habilitada" "Yellow"
-        }
-    }
-    
     # Ejecutar docker-compose desde el directorio Databases
     Write-ColorOutput "Iniciando contenedores Docker..." "Yellow"
     
     Push-Location $DatabasesDir
     try {
-
         docker-compose -f global-compose.yml up -d
         
         if ($LASTEXITCODE -eq 0) {
@@ -457,23 +441,23 @@ function Start-Services {
             
             # Esperar a que los servicios estén saludables
             Write-ColorOutput "Esperando a que los servicios estén listos..." "Yellow"
-            Start-Sleep -Seconds 15
+            Start-Sleep -Seconds 20
             
-            # Verificar estado de Redis específicamente
-            Write-ColorOutput "Verificando estado de Redis..." "Cyan"
-            $redisStatus = docker exec redis redis-cli ping
-            if ($redisStatus -eq "PONG") {
-                Write-ColorOutput "Redis está funcionando correctamente" "Green"
-                
-                # Verificar persistencia
-                $persistence = docker exec redis redis-cli info persistence
-                if ($persistence -match "aof_enabled:1") {
-                    Write-ColorOutput "Persistencia AOF está habilitada" "Green"
+            # Verificar estado del Redis Cluster
+            Write-ColorOutput "Verificando estado del Redis Cluster..." "Cyan"
+            try {
+                $clusterInfo = docker exec redis1 redis-cli cluster info
+                if ($clusterInfo -match "cluster_state:ok") {
+                    Write-ColorOutput "Redis Cluster está funcionando correctamente" "Green"
+                    
+                    # Mostrar información del cluster
+                    Write-ColorOutput "Información del Redis Cluster:" "Cyan"
+                    docker exec redis1 redis-cli cluster nodes
                 } else {
-                    Write-ColorOutput "ADVERTENCIA: Persistencia AOF no está habilitada" "Yellow"
+                    Write-ColorOutput "ADVERTENCIA: Redis Cluster no está completamente inicializado" "Yellow"
                 }
-            } else {
-                Write-ColorOutput "ERROR: Redis no responde" "Red"
+            } catch {
+                Write-ColorOutput "ERROR: No se pudo verificar el estado del Redis Cluster" "Red"
             }
             
             Show-ServicesStatus
@@ -519,7 +503,8 @@ function Clean-Services {
         $dataDirs = @(
             (Join-Path $DatabasesDir "mongo/data/mongo1"),
             (Join-Path $DatabasesDir "mongo/data/mongo2"), 
-            (Join-Path $DatabasesDir "redis/data")
+            (Join-Path $DatabasesDir "redis/data/redis1"),
+            (Join-Path $DatabasesDir "redis/data/redis2")
         )
         
         foreach ($dir in $dataDirs) {
@@ -542,7 +527,14 @@ function Show-ServicesStatus {
     try {
         docker-compose -f global-compose.yml ps
         
-        Write-ColorOutput "Logs recientes:" "Cyan"
+        Write-ColorOutput "`nRedis Cluster Info:" "Cyan"
+        try {
+            docker exec redis1 redis-cli cluster info
+        } catch {
+            Write-ColorOutput "No se pudo obtener información del cluster" "Yellow"
+        }
+        
+        Write-ColorOutput "`nLogs recientes:" "Cyan"
         docker-compose -f global-compose.yml logs --tail=3
     } finally {
         Pop-Location

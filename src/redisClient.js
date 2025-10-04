@@ -1,14 +1,15 @@
-import redis from 'redis';
+import { createClient } from 'redis';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 class RedisClient {
   constructor() {
-    this.client = redis.createClient({
+    // Connect to the master node only for simplicity
+    this.client = createClient({
       socket: {
         host: process.env.REDIS_HOST || 'localhost',
-        port: process.env.REDIS_PORT || 6379
+        port: parseInt(process.env.REDIS_PORT) || 6379
       },
       password: process.env.REDIS_PASSWORD
     });
@@ -23,55 +24,50 @@ class RedisClient {
     });
 
     this.client.on('connect', () => {
-      console.log('Conectado a Redis');
+      console.log('Connected to Redis Master');
+    });
+
+    this.client.on('ready', () => {
+      console.log('Redis Master ready');
     });
 
     this.client.on('disconnect', () => {
-      console.log('Desconectado de Redis');
+      console.log('Disconnected from Redis');
     });
   }
 
   async connect() {
     try {
       await this.client.connect();
-      console.log('Conexión a Redis establecida');
+      console.log('Redis connection established');
     } catch (error) {
-      console.error('Error conectando a Redis:', error);
+      console.error('Error connecting to Redis:', error);
       // Reintentar conexión después de 5 segundos
       setTimeout(() => this.connect(), 5000);
     }
   }
 
   async ensureConnection() {
-    if (!this.isConnected) {
-      console.log('Verificando conexión a Redis...');
-      try {
-        await this.ping();
-      } catch (error) {
-        console.log('Reconectando a Redis...');
-        await this.connect();
-      }
-    }
-  }
-  
-  async setUserWithLargeData(username, userData) {
-    await this.ensureConnection();
-    try {
-      // Para datos grandes como imágenes, podemos comprimir o dividir si es necesario
-      const result = await this.client.set(username, JSON.stringify(userData));
-      console.log(`Usuario ${username} guardado en Redis`);
-      return result;
-    } catch (error) {
-      console.error('Error guardando usuario con imagen:', error);
-      throw error;
+    if (!this.client.isOpen) {
+      console.log('Reconnecting to Redis...');
+      await this.connect();
     }
   }
 
   async setUser(username, userData) {
-    return await this.setUserWithLargeData(username, userData);
+    await this.ensureConnection();
+    try {
+      const result = await this.client.set(username, JSON.stringify(userData));
+      console.log(`Usuario ${username} guardado en Redis`);
+      return result;
+    } catch (error) {
+      console.error('Error guardando usuario:', error);
+      throw error;
+    }
   }
 
   async getUser(username) {
+    await this.ensureConnection();
     try {
       const userData = await this.client.get(username);
       return userData ? JSON.parse(userData) : null;
@@ -82,6 +78,7 @@ class RedisClient {
   }
 
   async deleteUser(username) {
+    await this.ensureConnection();
     try {
       const result = await this.client.del(username);
       return result;
@@ -92,6 +89,7 @@ class RedisClient {
   }
 
   async userExists(username) {
+    await this.ensureConnection();
     try {
       const exists = await this.client.exists(username);
       return exists === 1;
@@ -102,6 +100,7 @@ class RedisClient {
   }
 
   async getAllUsers() {
+    await this.ensureConnection();
     try {
       const keys = await this.client.keys('*');
       const users = [];
@@ -125,6 +124,7 @@ class RedisClient {
   }
 
   async ping() {
+    await this.ensureConnection();
     try {
       return await this.client.ping();
     } catch (error) {
@@ -147,5 +147,4 @@ class RedisClient {
   }
 }
 
-// Patrón Singleton para una única instancia
 export default new RedisClient();
