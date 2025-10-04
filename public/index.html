@@ -6,31 +6,35 @@
     <title>Index</title>
     <link rel="stylesheet" href="styles/styles.css">
     <link rel="shortcut icon" href="imgs/code-alt-regular-240.ico" type="image/x-icon">
+    <script>
+        function verifySession() {
+            try {
+                if (sessionStorage.length != 0) {
+                    if (sessionStorage.isLoggedIn == 'true') {
+                        window.location.href = 'desktop.html';
+                    } else {
+                        window.location.href = 'login.html';
+                    }
+                } else {
+                    window.location.href = 'login.html';
+                }
+            } catch {
+                window.location.href = 'login.html';
+            }
+        }        
+    </script>
 </head>
-<body>
+<body onload="verifySession()">
     <header>
 
     </header>
 
-    <main>
-        <h1>Index</h1>
+    <main style="padding: 2em">
+        <h1>Redirecting...</h1>
     </main>
 
     <footer>
 
     </footer>
 </body>
-<script>
-    try {
-        if (sessionStorage.getItem() != null) {
-            if (sessionStorage.isLoggedIn() == true) {
-                window.location.href = 'desktop.html';
-            } else {
-                window.location.href = 'login.html';
-            }
-        }
-    } catch {
-        window.location.href = 'login.html';
-    }
-</script>
 </html>

@@ -1024,6 +1024,10 @@ html {
     font-size: 60px;
 }
 
+#user_background img {
+    border-radius: 50%;
+}
+
 #user_background input {
     font-weight: bold;
     background-color: transparent;

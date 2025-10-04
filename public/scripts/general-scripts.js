@@ -1,3 +1,15 @@
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if we're already on login page
+    if (window.location.pathname === '/login.html') return;
+    
+    // Check session only once
+    const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+    
+    if (!isLoggedIn) {
+        window.location.href = 'login.html';
+    }
+});
+
 /* ---------- MESSAGE BEHAVIORS ---------- */
 const message_container = document.querySelector('.message_container');
 const close_message_btn = document.querySelector('#close_message_btn');
@@ -43,5 +55,15 @@ menu_opener.addEventListener('click', () => {
 const username = document.querySelector('#username');
 const user_profilepicture = document.querySelector('#user_profilepicture');
 
+const logout_option = document.querySelector('#logout_option');
+
 username.innerHTML = sessionStorage.currentUser;
 user_profilepicture.src = JSON.parse(sessionStorage.userData).profilePicture;
+
+logout_option.addEventListener('click', () => {
+    sessionStorage.setItem('currentUser', '');
+    sessionStorage.setItem('isLoggedIn', 'false');
+    sessionStorage.setItem('userData', '');
+    
+    window.location.href = 'index.html';
+});
