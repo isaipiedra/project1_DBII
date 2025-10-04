@@ -352,6 +352,14 @@ html {
     cursor: pointer;
 }
 
+#user_management_opener{
+    color: var(--icons-white);
+    font-size: 40px;
+    font-weight: 900;
+    cursor: pointer;
+    margin-left: 0.5em;
+}
+
 #user_inbox_menu i {
     color: var(--icons-white);
     font-size: 40px;
@@ -1993,6 +2001,73 @@ html {
 
 .action_btn i {
     font-size: 20px;
+}
+
+/* ----------------------- USER MANAGEMENT ENHANCEMENTS ----------------------- */
+.no-users-message {
+    text-align: center;
+    padding: 2em;
+    color: var(--lighter-purple);
+    font-style: italic;
+}
+
+/* Message styles */
+.user-management-message {
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Loading state */
+.user_list.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Disabled state for self-actions */
+.action_btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.action_btn:disabled:hover {
+    background-color: transparent !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .user_card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1em;
+    }
+    
+    .user_actions {
+        align-self: flex-end;
+    }
+    
+    .user_tabs {
+        flex-direction: column;
+    }
+    
+    .tab_btn {
+        width: 100%;
+    }
+}
+
+/* Error state for API failures */
+.user_card.error {
+    border-left-color: var(--delete-button) !important;
+    background-color: rgba(145, 35, 27, 0.1);
 }
 
 /* ----------------------- ------- ----------------------- */
