@@ -9,7 +9,7 @@ import { init_cassandra,
   get_comment_replies, update_reply_visibility,
   add_dataset_vote, get_votes_by_dataset, get_votes_by_user,
   record_new_download, get_downloads_by_dataset, start_conversation,
-  get_user_conversations, conversation_exists,send_message, get_conversation_messages} 
+  get_user_conversations, conversation_exists,send_message, get_conversation_messages, get_latest_message} 
   from './Cassandra/cassandra_methods.js';
 
 
@@ -343,7 +343,28 @@ app.get('/api/get_conversation_messages', async (req, res) => {
   }
 });
 
-
+/**Function which returns latest message registered in the db */
+app.get('/api/get_latest_message', async (req, res) => {
+  try {
+    const { id_conversation } = req.query;
+    
+    if (!id_conversation) {
+      return res.status(400).json({ error: "Falta 'id_conversation'" });
+    }
+    
+    const message = await get_latest_message(id_conversation);
+    
+    if (!message) {
+      return res.status(404).json({ error: "No hay mensajes en esta conversación" });
+    }
+    
+    res.json(message);
+    
+  } catch (error) {
+    console.error("get_latest_message error:", error);
+    res.status(500).json({ error: "Error al obtener último mensaje" });
+  }
+});
 
 /*Cassandra methods end here*/
 async function startServer() {

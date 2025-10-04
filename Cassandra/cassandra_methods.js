@@ -408,27 +408,23 @@ export async function get_conversation_messages(id_conversation) {
   }));
 }
 
-/**const query = 'SELECT * FROM COMMENT_DS';
-
-client.execute(query).then(result => {
-        if (result.rows && result.rows.length > 0) {
-            result.rows.forEach((row, index) => {
-                console.log(`Fila ${index + 1}:`, {
-                    id_dataset: row.id_dataset,
-                    id_comment: row.id_comment,
-                    user_name: row.user_name,
-                    comment: row.reply,
-                    visible: row.visible
-                });
-            });
-        } else {
-            console.log('No se encontraron datos en la tabla');
-        }
-    })
-    .catch(err => {
-        console.error('Error ejecutando query:', err);
-    })
-    .finally(() => {
-        client.shutdown();
-    });*/
-
+export async function get_latest_message(id_conversation) {
+  const id_conversation_uuid = types.TimeUuid.fromString(id_conversation);
+  
+  const query = `
+    SELECT id_conversation, id_message, id_user, message
+    FROM conversation_message
+    WHERE id_conversation = ?
+    LIMIT 1
+  `;
+  
+  const result = await client.execute(query, [id_conversation_uuid], { prepare: true });
+  
+  if (result.rows.length === 0) {
+    return null;
+  }
+  
+  const row = result.rows[0];
+  return {id_conversation: row.id_conversation.toString(), id_message: row.id_message.toString(), id_user: row.id_user, message: row.message, sent_at: row.id_message.getDate().toISOString()
+  };
+}
