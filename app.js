@@ -31,18 +31,6 @@ import { init_cassandra,
   import mongoose from 'mongoose';
   import { GridFSBucket } from 'mongodb';
 
-  /* Neo4J */
-import { 
-  init_neo4j, 
-  create_person, 
-  get_all_people,
-  find_person_by_name,
-  delete_person,
-  create_friendship,
-  get_friends,
-  check_neo4j_health 
-} from './Databases/Neo4j/neo4j_methods.js';
-
 const app = express();
 const port = process.env.API_PORT || 3000;
 
@@ -336,26 +324,6 @@ app.get('/users', async (req, res) => {
   }
 });
 
-app.get('/api/users/search', async (req, res) => {
-    try {
-        const { query } = req.query;
-        if (!query) {
-            return res.status(400).json({ error: "Search query is required" });
-        }
-
-        // Get all users and filter by username
-        const allUsers = await userService.getAllUsers();
-        const filteredUsers = allUsers.filter(user => 
-            user.username.toLowerCase().includes(query.toLowerCase())
-        ).slice(0, 10); // Limit to 10 results
-
-        res.json(filteredUsers);
-    } catch (error) {
-        console.error('User search error:', error);
-        res.status(500).json({ error: 'Error searching users' });
-    }
-});
-
 // Autenticar usuario
 app.post('/auth/login', async (req, res) => {
   try {
@@ -553,114 +521,6 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada' });
 });
 
-// Rutas de Repositorios (still redis)
-
-// Obtener todos los repositorios de un usuario
-app.get('/users/:username/repositories', async (req, res) => {
-  try {
-    const { username } = req.params;
-    const repositories = await userService.getRepositories(username);
-    res.json(repositories);
-  } catch (error) {
-    console.error('Error obteniendo repositorios:', error.message);
-    
-    if (error.message === 'Usuario no encontrado') {
-      return res.status(404).json({ error: error.message });
-    }
-    
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-});
-
-// Obtener un repositorio específico
-app.get('/users/:username/repositories/:repoId', async (req, res) => {
-  try {
-    const { username, repoId } = req.params;
-    const repository = await userService.getRepository(username, repoId);
-    res.json(repository);
-  } catch (error) {
-    console.error('Error obteniendo repositorio:', error.message);
-    
-    if (error.message === 'Usuario no encontrado' || error.message === 'Repositorio no encontrado') {
-      return res.status(404).json({ error: error.message });
-    }
-    
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-});
-
-// Crear un nuevo repositorio
-app.post('/users/:username/repositories', async (req, res) => {
-  try {
-    const { username } = req.params;
-    const repositoryData = req.body;
-
-    const result = await userService.addRepository(username, repositoryData);
-
-    res.status(201).json({
-      message: 'Repositorio creado exitosamente',
-      repository: result
-    });
-  } catch (error) {
-    console.error('Error creando repositorio:', error.message);
-    
-    if (error.message === 'Usuario no encontrado') {
-      return res.status(404).json({ error: error.message });
-    }
-    if (error.message === 'El nombre del repositorio es requerido') {
-      return res.status(400).json({ error: error.message });
-    }
-    if (error.message === 'El usuario ya tiene un repositorio con ese nombre') {
-      return res.status(409).json({ error: error.message });
-    }
-    
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-});
-
-// Actualizar un repositorio
-app.put('/users/:username/repositories/:repoId', async (req, res) => {
-  try {
-    const { username, repoId } = req.params;
-    const updateData = req.body;
-
-    const result = await userService.updateRepository(username, repoId, updateData);
-
-    res.json({
-      message: 'Repositorio actualizado exitosamente',
-      repository: result
-    });
-  } catch (error) {
-    console.error('Error actualizando repositorio:', error.message);
-    
-    if (error.message === 'Usuario no encontrado' || error.message === 'Repositorio no encontrado') {
-      return res.status(404).json({ error: error.message });
-    }
-    if (error.message === 'El usuario ya tiene un repositorio con ese nombre') {
-      return res.status(409).json({ error: error.message });
-    }
-    
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-});
-
-// Eliminar un repositorio
-app.delete('/users/:username/repositories/:repoId', async (req, res) => {
-  try {
-    const { username, repoId } = req.params;
-
-    const result = await userService.deleteRepository(username, repoId);
-    res.json(result);
-  } catch (error) {
-    console.error('Error eliminando repositorio:', error.message);
-    
-    if (error.message === 'Usuario no encontrado' || error.message === 'Repositorio no encontrado') {
-      return res.status(404).json({ error: error.message });
-    }
-    
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-});
 
 //------------- Cassandra methods start here -------------
 
@@ -1010,123 +870,11 @@ app.get('/api/get_latest_message', async (req, res) => {
   }
 });
 
-
-/*Neo4J functions*/
-app.get('/neo4j/health', async (req, res) => {
-  try {
-    const health = await check_neo4j_health();
-    res.json(health);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/neo4j/person', async (req, res) => {
-  try {
-    const { name, lastName } = req.body;
-    
-    if (!name || !lastName) {
-      return res.status(400).json({ 
-        error: "Faltan campos requeridos: 'name' y 'lastName'" 
-      });
-    }
-    
-    const person = await create_person({ name, lastName });
-    res.status(201).json({
-      message: 'Persona creada exitosamente',
-      person
-    });
-  } catch (error) {
-    console.error('Error creando persona:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/neo4j/people', async (req, res) => {
-  try {
-    const people = await get_all_people();
-    res.json(people);
-  } catch (error) {
-    console.error('Error obteniendo personas:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/neo4j/people/search', async (req, res) => {
-  try {
-    const { name } = req.query;
-    
-    if (!name) {
-      return res.status(400).json({ error: "Falta parámetro 'name'" });
-    }
-    
-    const people = await find_person_by_name(name);
-    res.json(people);
-  } catch (error) {
-    console.error('Error buscando personas:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.delete('/neo4j/person/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    if (!id) {
-      return res.status(400).json({ error: "Falta ID de persona" });
-    }
-    
-    const result = await delete_person(id);
-    res.json({ message: 'Persona eliminada exitosamente', result });
-  } catch (error) {
-    console.error('Error eliminando persona:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/neo4j/friendship', async (req, res) => {
-  try {
-    const { person1Id, person2Id } = req.body;
-    
-    if (!person1Id || !person2Id) {
-      return res.status(400).json({ 
-        error: "Faltan 'person1Id' y 'person2Id'" 
-      });
-    }
-    
-    const result = await create_friendship(person1Id, person2Id);
-    res.status(201).json({
-      message: 'Amistad creada exitosamente',
-      result
-    });
-  } catch (error) {
-    console.error('Error creando amistad:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/neo4j/person/:id/friends', async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    if (!id) {
-      return res.status(400).json({ error: "Falta ID de persona" });
-    }
-    
-    const friends = await get_friends(id);
-    res.json(friends);
-  } catch (error) {
-    console.error('Error obteniendo amigos:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-/*Neo4J functions end here */
+/*Cassandra methods end here*/
 async function startServer() {
   try {
     await connectMongo();
     await init_cassandra();
-    await init_neo4j();
     app.listen(port, () => {
       console.log(`App running at http://localhost:${port}`);
     });
