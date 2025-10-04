@@ -31,6 +31,11 @@ import { init_cassandra,
   import mongoose from 'mongoose';
   import { GridFSBucket } from 'mongodb';
 
+  /* Neo4j */
+  import { init_neo4j, shutdown_neo4j, run_cypher, upsert_user, follow_user,
+         get_followers, upsert_dataset, get_followers_to_notify }
+  from './Databases/Neo4j/neo4j_methods.js';
+
 const app = express();
 const port = process.env.API_PORT || 3000;
 
@@ -875,6 +880,7 @@ async function startServer() {
   try {
     await connectMongo();
     await init_cassandra();
+    await init_neo4j();  
     app.listen(port, () => {
       console.log(`App running at http://localhost:${port}`);
     });
