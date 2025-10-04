@@ -8,12 +8,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Configuración de la API
     const API_BASE_URL = 'http://localhost:3000';
     
-    // File upload functionality (mantener igual)
-    fileUploadArea.addEventListener('click', function() {
-        fileInput.click();
-    });
-    
-    // ... (todo el código de drag and drop permanece igual)
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         fileUploadArea.addEventListener(eventName, preventDefaults, false);
     });
@@ -128,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     resetFileUploadText();
     
-    // Form validation and submission - MODIFICADO PARA CONECTAR CON LA API
+    // Form validation and submission 
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
