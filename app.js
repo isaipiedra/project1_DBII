@@ -25,11 +25,19 @@ import { init_cassandra,
     DataSet,
     approveDataSet,
     deleteDataSet,
+    getDatasetById,
     getDatasetsByName,
     cloneDatasetById,
-    getApprovedDatasets,} from './Databases/Mongodb/mongodb.js';
+    getApprovedDatasets,
+    getPendingDatasets,
+    getDatasetsByAuthor} from './Databases/Mongodb/mongodb.js';
   import mongoose from 'mongoose';
   import { GridFSBucket } from 'mongodb';
+
+  /* Neo4j */
+  import { init_neo4j, shutdown_neo4j, run_cypher, upsert_user, follow_user,
+         get_followers, upsert_dataset, get_followers_to_notify }
+  from './Databases/Neo4j/neo4j_methods.js';
 
 const app = express();
 const port = process.env.API_PORT || 3000;
@@ -44,7 +52,7 @@ app.use(express.static('public'));
 //--------------Inicio funciones de MongoDB--------------------
 
 // Insertar un nuevo dataset
-app.post('/api/add_dataset', async (req, res) => {
+app.post('/api/datasets/add_dataset', async (req, res) => {
   try {
     const { 
       name, 
@@ -96,6 +104,37 @@ app.get('/api/datasets/approved', async (req, res) => {
     res.status(400).json({ error: e.message });
   }
 });
+
+// Obtener datasets por autor
+app.get('/api/datasets/by-author', async (req, res) => {
+  try {
+    const { author } = req.query;
+    if (!author) return res.status(400).json({ error: "Falta 'author' en query" });
+
+    const limit = req.query.limit ? Number(req.query.limit) : 0;
+    const skip  = req.query.skip  ? Number(req.query.skip)  : 0;
+
+    const results = await getDatasetsByAuthor({ limit, skip }, author);
+    res.json(results);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+
+// Obtener datasets pendientes
+app.get('/api/datasets/pending', async (req, res) => {
+  try {
+    const limit = req.query.limit ? Number(req.query.limit) : 0;
+    const skip  = req.query.skip  ? Number(req.query.skip)  : 0;
+    const data  = await getPendingDatasets({ limit, skip });
+    res.json(data);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+
 
 //Buscar datasets por nombre
 app.get('/api/datasets/by-name', async (req, res) => {
@@ -1003,6 +1042,7 @@ async function startServer() {
   try {
     await connectMongo();
     await init_cassandra();
+    await init_neo4j();  
     app.listen(port, () => {
       console.log(`App running at http://localhost:${port}`);
     });

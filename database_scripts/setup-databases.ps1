@@ -1,11 +1,12 @@
 #!/usr/bin/env pwsh
 <#
 .SYNOPSIS
-    Script de configuración automática para MongoDB y Redis Cluster en Docker
+    Script de configuración automática para MongoDB, Redis, Cassandra y Neo4j Cluster en Docker
 
 .DESCRIPTION
     Este script automatiza la creación de la estructura de carpetas, archivos de configuración
-    y ejecución de los contenedores Docker para el proyecto con Redis Cluster de 2 nodos.
+    y ejecución de los contenedores Docker para el proyecto con Redis Cluster de 2 nodos,
+    Cassandra con 2 nodos y Neo4j con 2 nodos.
 
 .PARAMETER Init
     Inicia todos los servicios
@@ -100,6 +101,22 @@ function Initialize-DirectoryStructure {
         New-Item -ItemType Directory -Force -Path (Join-Path $redisDataDir "master") | Out-Null
         New-Item -ItemType Directory -Force -Path (Join-Path $redisDataDir "replica") | Out-Null
         Write-ColorOutput "Directorio creado: Databases/redis" "Green"
+    }
+    
+    # Estructura para Cassandra
+    $cassandraDir = Join-Path $DatabasesDir "cassandra"
+    
+    if (-not (Test-Path $cassandraDir)) {
+        New-Item -ItemType Directory -Force -Path $cassandraDir | Out-Null
+        Write-ColorOutput "Directorio creado: Databases/cassandra" "Green"
+    }
+    
+    # Estructura para Neo4j
+    $neo4jDir = Join-Path $DatabasesDir "neo4j"
+    
+    if (-not (Test-Path $neo4jDir)) {
+        New-Item -ItemType Directory -Force -Path $neo4jDir | Out-Null
+        Write-ColorOutput "Directorio creado: Databases/neo4j" "Green"
     }
     
     # Crear directorio de scripts si no existe
@@ -314,6 +331,140 @@ services:
       timeout: 3s
       retries: 5
 
+  # Cassandra Services
+  cass1:
+    image: cassandra:4.1
+    container_name: cass1
+    hostname: cass1
+    networks:
+      - db-network
+    ports:
+      - "9042:9042"
+      - "7000:7000"
+      - "7001:7001"
+      - "7199:7199"
+    environment:
+      CASSANDRA_CLUSTER_NAME: "LocalClusterCass"
+      CASSANDRA_NUM_TOKENS: 16
+      CASSANDRA_SEEDS: "cass1"
+      CASSANDRA_BROADCAST_ADDRESS: "cass1"
+      CASSANDRA_LISTEN_ADDRESS: "auto"
+      CASSANDRA_RPC_ADDRESS: "0.0.0.0"
+      CASSANDRA_ENDPOINT_SNITCH: "GossipingPropertyFileSnitch"
+    volumes:
+      - cass1_data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD", "nodetool", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+
+  cass2:
+    image: cassandra:4.1
+    container_name: cass2
+    hostname: cass2
+    networks:
+      - db-network
+    environment:
+      CASSANDRA_CLUSTER_NAME: "LocalClusterCass"
+      CASSANDRA_NUM_TOKENS: 16
+      CASSANDRA_SEEDS: "cass1"
+      CASSANDRA_BROADCAST_ADDRESS: "cass2"
+      CASSANDRA_LISTEN_ADDRESS: "auto"
+      CASSANDRA_RPC_ADDRESS: "0.0.0.0"
+      CASSANDRA_ENDPOINT_SNITCH: "GossipingPropertyFileSnitch"
+    volumes:
+      - cass2_data:/var/lib/cassandra
+    depends_on:
+      cass1:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "nodetool", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+
+  # Neo4j Services
+  neo4j1:
+    image: neo4j:5.22.0-enterprise
+    container_name: neo4j1
+    hostname: neo4j1
+    networks:
+      - db-network
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
+      - NEO4J_AUTH=neo4j/password123
+      - NEO4JLABS_PLUGINS=["apoc"]
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+      - NEO4J_dbms_security_procedures_allowlist=apoc.*
+      - NEO4J_apoc_export_file_enabled=true
+      - NEO4J_apoc_import_file_enabled=true
+      - NEO4J_dbms_memory_pagecache_size=1G
+      - NEO4J_dbms_memory_heap_initial__size=1G
+      - NEO4J_dbms_memory_heap_max__size=1G
+      - NEO4J_server_default__listen__address=0.0.0.0
+      - NEO4J_server_http_listen__address=:7474
+      - NEO4J_server_bolt_listen__address=:7687
+      - NEO4J_server_discovery_listen__address=:5000
+      - NEO4J_server_cluster_listen__address=:6000
+      - NEO4J_server_cluster_raft_listen__address=:7000
+      - NEO4J_initial_server_mode__constraint=PRIMARY
+      - NEO4J_dbms_cluster_discovery_endpoints=neo4j1:5000,neo4j2:5000
+      - NEO4J_dbms_cluster_minimum__initial__system__primaries__count=2
+      - NEO4J_server_discovery_advertised__address=neo4j1:5000
+      - NEO4J_server_cluster_advertised__address=neo4j1:6000
+      - NEO4J_server_cluster_raft_advertised__address=neo4j1:7000
+      - NEO4J_server_bolt_advertised__address=localhost:7687
+      - NEO4J_server_http_advertised__address=localhost:7474
+    volumes:
+      - neo4j1_data:/data
+      - neo4j1_logs:/logs
+      - neo4j1_import:/var/lib/neo4j/import
+      - neo4j1_plugins:/plugins
+
+  neo4j2:
+    image: neo4j:5.22.0-enterprise
+    container_name: neo4j2
+    hostname: neo4j2
+    networks:
+      - db-network
+    ports:
+      - "7475:7474"
+      - "7688:7687"
+    environment:
+      - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
+      - NEO4J_AUTH=neo4j/password123
+      - NEO4JLABS_PLUGINS=["apoc"]
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+      - NEO4J_dbms_security_procedures_allowlist=apoc.*
+      - NEO4J_apoc_export_file_enabled=true
+      - NEO4J_apoc_import_file_enabled=true
+      - NEO4J_dbms_memory_pagecache_size=1G
+      - NEO4J_dbms_memory_heap_initial__size=1G
+      - NEO4J_dbms_memory_heap_max__size=1G
+      - NEO4J_server_default__listen__address=0.0.0.0
+      - NEO4J_server_http_listen__address=:7474
+      - NEO4J_server_bolt_listen__address=:7687
+      - NEO4J_server_discovery_listen__address=:5000
+      - NEO4J_server_cluster_listen__address=:6000
+      - NEO4J_server_cluster_raft_listen__address=:7000
+      - NEO4J_initial_server_mode__constraint=PRIMARY
+      - NEO4J_dbms_cluster_discovery_endpoints=neo4j1:5000,neo4j2:5000
+      - NEO4J_dbms_cluster_minimum__initial__system__primaries__count=2
+      - NEO4J_server_discovery_advertised__address=neo4j2:5000
+      - NEO4J_server_cluster_advertised__address=neo4j2:6000
+      - NEO4J_server_cluster_raft_advertised__address=neo4j2:7000
+      - NEO4J_server_bolt_advertised__address=localhost:7688
+      - NEO4J_server_http_advertised__address=localhost:7475
+    volumes:
+      - neo4j2_data:/data
+      - neo4j2_logs:/logs
+      - neo4j2_import:/var/lib/neo4j/import
+      - neo4j2_plugins:/plugins
+
   # Replica Set Initialization
   rs-init:
     image: mongo:7.0
@@ -350,11 +501,23 @@ services:
 networks:
   db-network:
     driver: bridge
+
+volumes:
+  cass1_data:
+  cass2_data:
+  neo4j1_data:
+  neo4j1_logs:
+  neo4j1_import:
+  neo4j1_plugins:
+  neo4j2_data:
+  neo4j2_logs:
+  neo4j2_import:
+  neo4j2_plugins:
 '@
 
     $globalComposePath = Join-Path $DatabasesDir "global-compose.yml"
     $globalCompose | Out-File -FilePath $globalComposePath -Encoding UTF8 -Force
-    Write-ColorOutput "Archivo actualizado: Databases/global-compose.yml (Redis Replication)" "Green"
+    Write-ColorOutput "Archivo actualizado: Databases/global-compose.yml (con Cassandra y Neo4j)" "Green"
 }
 
 function Create-EnvironmentFiles {
@@ -372,6 +535,16 @@ REDIS1_HOST=localhost
 REDIS1_PORT=6379
 REDIS2_HOST=localhost
 REDIS2_PORT=6380
+
+# Cassandra Configuration
+CASSANDRA_CONTACT_POINTS=localhost:9042
+CASSANDRA_KEYSPACE=mykeyspace
+CASSANDRA_DATACENTER=datacenter1
+
+# Neo4j Configuration
+NEO4J_URI=bolt://localhost:7687
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=password123
 
 # Application Configuration
 API_PORT=3000
@@ -581,7 +754,7 @@ function Start-Services {
             
             # Esperar a que los servicios estén saludables
             Write-ColorOutput "Esperando a que los servicios estén listos..." "Yellow"
-            Start-Sleep -Seconds 20
+            Start-Sleep -Seconds 30
             
             # Create admin user
             Initialize-AdminUser
@@ -611,6 +784,33 @@ function Start-Services {
                 Write-ColorOutput "ERROR: No se pudo verificar el estado de Redis" "Red"
             }
             
+            # Verificar estado de Cassandra
+            Write-ColorOutput "`nVerificando estado de Cassandra..." "Cyan"
+            Start-Sleep -Seconds 30
+            try {
+                $cassStatus = docker exec cass1 nodetool status 2>$null
+                if ($LASTEXITCODE -eq 0) {
+                    Write-ColorOutput "Cassandra está funcionando correctamente" "Green"
+                } else {
+                    Write-ColorOutput "ADVERTENCIA: Cassandra aún se está iniciando..." "Yellow"
+                }
+            } catch {
+                Write-ColorOutput "ADVERTENCIA: No se pudo verificar el estado de Cassandra" "Yellow"
+            }
+            
+            # Verificar estado de Neo4j
+            Write-ColorOutput "`nVerificando estado de Neo4j..." "Cyan"
+            try {
+                $neo4jStatus = docker exec neo4j1 cypher-shell -u neo4j -p password123 "RETURN 1" 2>$null
+                if ($LASTEXITCODE -eq 0) {
+                    Write-ColorOutput "Neo4j está funcionando correctamente" "Green"
+                } else {
+                    Write-ColorOutput "ADVERTENCIA: Neo4j aún se está iniciando..." "Yellow"
+                }
+            } catch {
+                Write-ColorOutput "ADVERTENCIA: No se pudo verificar el estado de Neo4j" "Yellow"
+            }
+            
             Show-ServicesStatus
 
         } else {
@@ -619,6 +819,19 @@ function Start-Services {
     } finally {
         Pop-Location
     }
+    
+    Write-ColorOutput "`nTodos los servicios han sido iniciados" "Green"
+    Write-ColorOutput "URLs de acceso:" "Cyan"
+    Write-ColorOutput "  - MongoDB Primary: localhost:27017" "White"
+    Write-ColorOutput "  - MongoDB Secondary: localhost:27018" "White"
+    Write-ColorOutput "  - Redis Master: localhost:6379" "White"
+    Write-ColorOutput "  - Redis Replica: localhost:6380" "White"
+    Write-ColorOutput "  - Cassandra: localhost:9042" "White"
+    Write-ColorOutput "  - Neo4j Browser 1: http://localhost:7474" "White"
+    Write-ColorOutput "  - Neo4j Browser 2: http://localhost:7475" "White"
+    Write-ColorOutput "`nCredenciales Neo4j:" "Cyan"
+    Write-ColorOutput "  Usuario: neo4j" "White"
+    Write-ColorOutput "  Contraseña: password123" "White"
 }
 
 function Stop-Services {
@@ -654,8 +867,8 @@ function Clean-Services {
         $dataDirs = @(
             (Join-Path $DatabasesDir "mongo/data/mongo1"),
             (Join-Path $DatabasesDir "mongo/data/mongo2"), 
-            (Join-Path $DatabasesDir "redis/data/redis1"),
-            (Join-Path $DatabasesDir "redis/data/redis2")
+            (Join-Path $DatabasesDir "redis/data/master"),
+            (Join-Path $DatabasesDir "redis/data/replica")
         )
         
         foreach ($dir in $dataDirs) {
@@ -678,11 +891,25 @@ function Show-ServicesStatus {
     try {
         docker-compose -f global-compose.yml ps
         
-        Write-ColorOutput "`nRedis Cluster Info:" "Cyan"
+        Write-ColorOutput "`nRedis Info:" "Cyan"
         try {
-            docker exec redis1 redis-cli cluster info
+            docker exec redis-master redis-cli info replication
         } catch {
-            Write-ColorOutput "No se pudo obtener información del cluster" "Yellow"
+            Write-ColorOutput "No se pudo obtener información de Redis" "Yellow"
+        }
+        
+        Write-ColorOutput "`nCassandra Cluster Status:" "Cyan"
+        try {
+            docker exec cass1 nodetool status
+        } catch {
+            Write-ColorOutput "No se pudo obtener información de Cassandra" "Yellow"
+        }
+        
+        Write-ColorOutput "`nNeo4j Cluster Status:" "Cyan"
+        try {
+            docker exec neo4j1 cypher-shell -u neo4j -p password123 "CALL dbms.cluster.overview()" 2>$null
+        } catch {
+            Write-ColorOutput "No se pudo obtener información del cluster Neo4j" "Yellow"
         }
         
         Write-ColorOutput "`nLogs recientes:" "Cyan"
