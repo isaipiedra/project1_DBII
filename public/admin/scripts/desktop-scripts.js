@@ -16,6 +16,6 @@ notification_opener.addEventListener('click', () => {
 });
 
 user_management_opener.addEventListener('click', () => {
-    window.location.href = 'desktop.html';
+    window.location.href = 'user-management.html';
 });
 
