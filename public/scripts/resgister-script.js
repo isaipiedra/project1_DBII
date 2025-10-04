@@ -1,4 +1,3 @@
-// script.js
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('registerForm');
     const fileUploadArea = document.getElementById('fileUploadArea');
@@ -6,12 +5,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const filePreview = document.getElementById('filePreview');
     const fileError = document.getElementById('fileError');
     
-    // File upload functionality
+    // Configuración de la API
+    const API_BASE_URL = 'http://localhost:3000';
+    
+    // File upload functionality (mantener igual)
     fileUploadArea.addEventListener('click', function() {
         fileInput.click();
     });
     
-    // Drag and drop functionality
+    // ... (todo el código de drag and drop permanece igual)
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         fileUploadArea.addEventListener(eventName, preventDefaults, false);
     });
@@ -57,7 +59,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function handleFileSelection(file) {
         if (file && file.type.startsWith('image/')) {
-            // Check file size (5MB limit)
             if (file.size > 5 * 1024 * 1024) {
                 showError(fileError, 'File size must be less than 5MB');
                 fileInput.value = '';
@@ -70,7 +71,6 @@ document.addEventListener('DOMContentLoaded', function() {
             fileUploadArea.classList.add('has-file');
             clearError(fileError);
             
-            // Update the text to show file name
             updateFileUploadText(file.name);
             
             const reader = new FileReader();
@@ -89,13 +89,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function updateFileUploadText(fileName) {
-        // Find all text elements in the file upload area
         const textElements = fileUploadArea.querySelectorAll('p, span, div:not(.file-preview)');
-        
-        // Clear existing content except the icon
         fileUploadArea.querySelectorAll('p').forEach(p => p.remove());
         
-        // Add the file name text
         const fileNameElement = document.createElement('p');
         fileNameElement.textContent = `Selected: ${fileName}`;
         fileNameElement.style.fontWeight = 'bold';
@@ -107,17 +103,14 @@ document.addEventListener('DOMContentLoaded', function() {
         changeTextElement.style.color = 'var(--lighter-purple)';
         changeTextElement.style.margin = '0';
         
-        // Insert after the icon
         const icon = fileUploadArea.querySelector('i');
         fileUploadArea.insertBefore(changeTextElement, icon.nextSibling);
         fileUploadArea.insertBefore(fileNameElement, icon.nextSibling);
     }
     
     function resetFileUploadText() {
-        // Clear existing content except the icon
         fileUploadArea.querySelectorAll('p').forEach(p => p.remove());
         
-        // Add back the original text
         const originalText1 = document.createElement('p');
         originalText1.textContent = 'Click to upload or drag and drop';
         originalText1.style.margin = '10px 0 5px 0';
@@ -128,51 +121,162 @@ document.addEventListener('DOMContentLoaded', function() {
         originalText2.style.color = 'var(--lighter-purple)';
         originalText2.style.margin = '0';
         
-        // Insert after the icon
         const icon = fileUploadArea.querySelector('i');
         fileUploadArea.insertBefore(originalText2, icon.nextSibling);
         fileUploadArea.insertBefore(originalText1, icon.nextSibling);
     }
     
-    // Initialize with the original text
     resetFileUploadText();
     
-    // Form validation and submission
-    form.addEventListener('submit', function(e) {
+    // Form validation and submission - MODIFICADO PARA CONECTAR CON LA API
+    form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        // Clear previous errors
         clearAllErrors();
         
         let isValid = validateForm();
         
         if (isValid) {
-            // Simulate form submission
-            const submitBtn = form.querySelector('.btn-primary');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Creating Account...';
-            submitBtn.disabled = true;
-            
-            // Simulate API call
-            setTimeout(function() {
-                // Show success message
-                const successMessage = document.createElement('div');
-                successMessage.className = 'success-message active';
-                successMessage.innerHTML = '<i class="bx bx-check-circle"></i> Account created successfully! Redirecting...';
-                form.appendChild(successMessage);
-                
-                // Redirect after delay (simulation)
-                setTimeout(function() {
-                    window.location.href = 'desktop.html';
-                }, 2000);
-            }, 1500);
+            await submitForm();
         }
     });
     
+    async function submitForm() {
+        const submitBtn = form.querySelector('.btn-primary');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Creating Account...';
+        submitBtn.disabled = true;
+        
+        try {
+
+            // Obtener la imagen como base64 si existe
+            let profilePictureBase64 = null;
+            const fileInput = document.getElementById('profilePicture');
+            
+            if (fileInput.files.length > 0) {
+                profilePictureBase64 = await convertImageToBase64(fileInput.files[0]);
+            }
+
+            // Preparar datos del formulario
+            const formData = {
+                firstName: document.getElementById('firstName').value.trim(),
+                lastName: document.getElementById('lastName').value.trim(),
+                birthDate: document.getElementById('dateOfBirth').value,
+                password: document.getElementById('password').value,
+                profilePicture: profilePictureBase64
+            };
+            
+            const username = document.getElementById('username').value.trim();
+
+            // Validar el tamaño de la imágen
+            if (profilePictureBase64 && profilePictureBase64.length > 1.5 * 1024 * 1024) {
+                throw new Error('La imagen es demasiado grande. Máximo 1MB permitido.');
+            }
+            
+            // Enviar datos a la API
+            const response = await fetch(`${API_BASE_URL}/users/${username}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                // Registro exitoso
+                showSuccessMessage('Account created successfully! Redirecting to login...');
+                
+                // Redirigir al login después de 2 segundos
+                setTimeout(() => {
+                    window.location.href = '/login.html';
+                }, 2000);
+                
+            } else {
+                // Error del servidor
+                throw new Error(result.error || 'Registration failed');
+            }
+            
+        } catch (error) {
+            console.error('Error during registration:', error);
+            
+            // Mostrar error específico al usuario
+            if (error.message.includes('usuario ya existe') || error.message.includes('already exists')) {
+                showError(document.getElementById('usernameError'), 'Username already exists');
+                document.getElementById('username').parentElement.classList.add('error');
+            } else if (error.message.includes('demasiado grande')) {
+                showError(document.getElementById('fileError'), 'Image too large. Maximum 1MB allowed.');
+            } else if (error.message.includes('network') || error.message.includes('fetch')) {
+                showGeneralError('Network error. Please check if the server is running.');
+            } else {
+                showGeneralError(error.message || 'Registration failed. Please try again.');
+            }
+            
+        } finally {
+            // Restaurar el botón
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    }
+    
+    // Función para convertir imagen a Base64
+    function convertImageToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                // Redimensionar imagen si es muy grande antes de convertir a base64
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Tamaño máximo para la imagen
+                    const MAX_WIDTH = 300;
+                    const MAX_HEIGHT = 300;
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Convertir a base64 con calidad reducida para ahorrar espacio
+                    const resizedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    resolve(resizedBase64);
+                };
+                
+                img.onerror = function() {
+                    // Si no se puede redimensionar, usar el original
+                    resolve(e.target.result);
+                };
+                
+                img.src = e.target.result;
+            };
+            
+            reader.onerror = function(error) {
+                reject(error);
+            };
+            
+            reader.readAsDataURL(file);
+        });
+    }
     function validateForm() {
         let isValid = true;
         
-        // Validate required fields
         const requiredFields = [
             { id: 'firstName', message: 'First name is required' },
             { id: 'lastName', message: 'Last name is required' },
@@ -191,7 +295,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Validate password match
+        // Validar contraseñas
         const password = document.getElementById('password');
         const confirmPassword = document.getElementById('confirmPassword');
         
@@ -201,14 +305,13 @@ document.addEventListener('DOMContentLoaded', function() {
             isValid = false;
         }
         
-        // Validate password strength
         if (password.value.length > 0 && password.value.length < 8) {
             showError(document.getElementById('passwordError'), 'Password must be at least 8 characters');
             password.parentElement.classList.add('error');
             isValid = false;
         }
         
-        // Validate date of birth (must be at least 13 years old)
+        // Validar fecha de nacimiento
         const dob = new Date(document.getElementById('dateOfBirth').value);
         if (document.getElementById('dateOfBirth').value) {
             const today = new Date();
@@ -221,7 +324,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // Validate username format
+        // Validar formato de username
         const username = document.getElementById('username').value;
         const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
         if (username && !usernameRegex.test(username)) {
@@ -233,7 +336,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return isValid;
     }
     
-    // Real-time validation for password confirmation
+    // Real-time validation (mantener igual)
     document.getElementById('confirmPassword').addEventListener('input', function() {
         const password = document.getElementById('password').value;
         const confirmPassword = this.value;
@@ -247,7 +350,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Real-time validation for password strength
     document.getElementById('password').addEventListener('input', function() {
         if (this.value.length > 0 && this.value.length < 8) {
             showError(document.getElementById('passwordError'), 'Password must be at least 8 characters');
@@ -261,16 +363,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // Helper functions
     function showError(element, message) {
         element.textContent = message;
+        element.style.display = 'block';
     }
     
     function clearError(element) {
         element.textContent = '';
+        element.style.display = 'none';
     }
     
     function clearAllErrors() {
         const errorElements = document.querySelectorAll('.error-message');
         errorElements.forEach(element => {
             element.textContent = '';
+            element.style.display = 'none';
         });
         
         const errorInputs = document.querySelectorAll('.form-group.error');
@@ -278,4 +383,27 @@ document.addEventListener('DOMContentLoaded', function() {
             element.classList.remove('error');
         });
     }
+    
+    function showSuccessMessage(message) {
+        // Eliminar mensajes anteriores
+        const existingMessages = document.querySelectorAll('.success-message, .error-message-global');
+        existingMessages.forEach(msg => msg.remove());
+        
+        const successMessage = document.createElement('div');
+        successMessage.className = 'success-message active';
+        successMessage.innerHTML = `<i class="bx bx-check-circle"></i> ${message}`;
+        form.appendChild(successMessage);
+    }
+    
+    function showGeneralError(message) {
+        // Eliminar mensajes anteriores
+        const existingMessages = document.querySelectorAll('.success-message, .error-message-global');
+        existingMessages.forEach(msg => msg.remove());
+        
+        const errorMessage = document.createElement('div');
+        errorMessage.className = 'error-message-global active';
+        errorMessage.innerHTML = `<i class="bx bx-error-circle"></i> ${message}`;
+        form.appendChild(errorMessage);
+    }
+
 });
