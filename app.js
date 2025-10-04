@@ -25,11 +25,19 @@ import { init_cassandra,
     DataSet,
     approveDataSet,
     deleteDataSet,
+    getDatasetById,
     getDatasetsByName,
     cloneDatasetById,
-    getApprovedDatasets,} from './Databases/Mongodb/mongodb.js';
+    getApprovedDatasets,
+    getPendingDatasets,
+    getDatasetsByAuthor} from './Databases/Mongodb/mongodb.js';
   import mongoose from 'mongoose';
   import { GridFSBucket } from 'mongodb';
+
+  /* Neo4j */
+  import { init_neo4j, shutdown_neo4j, run_cypher, upsert_user, follow_user,
+         get_followers, upsert_dataset, get_followers_to_notify }
+  from './Databases/Neo4j/neo4j_methods.js';
 
 const app = express();
 const port = process.env.API_PORT || 3000;
@@ -44,7 +52,7 @@ app.use(express.static('public'));
 //--------------Inicio funciones de MongoDB--------------------
 
 // Insertar un nuevo dataset
-app.post('/api/add_dataset', async (req, res) => {
+app.post('/api/datasets/add_dataset', async (req, res) => {
   try {
     const { 
       name, 
@@ -96,6 +104,37 @@ app.get('/api/datasets/approved', async (req, res) => {
     res.status(400).json({ error: e.message });
   }
 });
+
+// Obtener datasets por autor
+app.get('/api/datasets/by-author', async (req, res) => {
+  try {
+    const { author } = req.query;
+    if (!author) return res.status(400).json({ error: "Falta 'author' en query" });
+
+    const limit = req.query.limit ? Number(req.query.limit) : 0;
+    const skip  = req.query.skip  ? Number(req.query.skip)  : 0;
+
+    const results = await getDatasetsByAuthor({ limit, skip }, author);
+    res.json(results);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+
+// Obtener datasets pendientes
+app.get('/api/datasets/pending', async (req, res) => {
+  try {
+    const limit = req.query.limit ? Number(req.query.limit) : 0;
+    const skip  = req.query.skip  ? Number(req.query.skip)  : 0;
+    const data  = await getPendingDatasets({ limit, skip });
+    res.json(data);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+
 
 //Buscar datasets por nombre
 app.get('/api/datasets/by-name', async (req, res) => {
@@ -324,6 +363,26 @@ app.get('/users', async (req, res) => {
   }
 });
 
+app.get('/api/users/search', async (req, res) => {
+    try {
+        const { query } = req.query;
+        if (!query) {
+            return res.status(400).json({ error: "Search query is required" });
+        }
+
+        // Get all users and filter by username
+        const allUsers = await userService.getAllUsers();
+        const filteredUsers = allUsers.filter(user => 
+            user.username.toLowerCase().includes(query.toLowerCase())
+        ).slice(0, 10); // Limit to 10 results
+
+        res.json(filteredUsers);
+    } catch (error) {
+        console.error('User search error:', error);
+        res.status(500).json({ error: 'Error searching users' });
+    }
+});
+
 // Autenticar usuario
 app.post('/auth/login', async (req, res) => {
   try {
@@ -521,6 +580,114 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada' });
 });
 
+// Rutas de Repositorios (still redis)
+
+// Obtener todos los repositorios de un usuario
+app.get('/users/:username/repositories', async (req, res) => {
+  try {
+    const { username } = req.params;
+    const repositories = await userService.getRepositories(username);
+    res.json(repositories);
+  } catch (error) {
+    console.error('Error obteniendo repositorios:', error.message);
+    
+    if (error.message === 'Usuario no encontrado') {
+      return res.status(404).json({ error: error.message });
+    }
+    
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Obtener un repositorio específico
+app.get('/users/:username/repositories/:repoId', async (req, res) => {
+  try {
+    const { username, repoId } = req.params;
+    const repository = await userService.getRepository(username, repoId);
+    res.json(repository);
+  } catch (error) {
+    console.error('Error obteniendo repositorio:', error.message);
+    
+    if (error.message === 'Usuario no encontrado' || error.message === 'Repositorio no encontrado') {
+      return res.status(404).json({ error: error.message });
+    }
+    
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Crear un nuevo repositorio
+app.post('/users/:username/repositories', async (req, res) => {
+  try {
+    const { username } = req.params;
+    const repositoryData = req.body;
+
+    const result = await userService.addRepository(username, repositoryData);
+
+    res.status(201).json({
+      message: 'Repositorio creado exitosamente',
+      repository: result
+    });
+  } catch (error) {
+    console.error('Error creando repositorio:', error.message);
+    
+    if (error.message === 'Usuario no encontrado') {
+      return res.status(404).json({ error: error.message });
+    }
+    if (error.message === 'El nombre del repositorio es requerido') {
+      return res.status(400).json({ error: error.message });
+    }
+    if (error.message === 'El usuario ya tiene un repositorio con ese nombre') {
+      return res.status(409).json({ error: error.message });
+    }
+    
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Actualizar un repositorio
+app.put('/users/:username/repositories/:repoId', async (req, res) => {
+  try {
+    const { username, repoId } = req.params;
+    const updateData = req.body;
+
+    const result = await userService.updateRepository(username, repoId, updateData);
+
+    res.json({
+      message: 'Repositorio actualizado exitosamente',
+      repository: result
+    });
+  } catch (error) {
+    console.error('Error actualizando repositorio:', error.message);
+    
+    if (error.message === 'Usuario no encontrado' || error.message === 'Repositorio no encontrado') {
+      return res.status(404).json({ error: error.message });
+    }
+    if (error.message === 'El usuario ya tiene un repositorio con ese nombre') {
+      return res.status(409).json({ error: error.message });
+    }
+    
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Eliminar un repositorio
+app.delete('/users/:username/repositories/:repoId', async (req, res) => {
+  try {
+    const { username, repoId } = req.params;
+
+    const result = await userService.deleteRepository(username, repoId);
+    res.json(result);
+  } catch (error) {
+    console.error('Error eliminando repositorio:', error.message);
+    
+    if (error.message === 'Usuario no encontrado' || error.message === 'Repositorio no encontrado') {
+      return res.status(404).json({ error: error.message });
+    }
+    
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
 
 //------------- Cassandra methods start here -------------
 
@@ -875,6 +1042,7 @@ async function startServer() {
   try {
     await connectMongo();
     await init_cassandra();
+    await init_neo4j();  
     app.listen(port, () => {
       console.log(`App running at http://localhost:${port}`);
     });

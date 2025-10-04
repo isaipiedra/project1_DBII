@@ -24,7 +24,8 @@ class UserService {
       birthDate,
       password: hashedPassword,
       profilePicture: profilePicture || null,
-      admin: admin || false, // Default to false if not provided
+      admin: admin || false,
+      repositories: [], // Initialize empty repositories array
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -37,7 +38,8 @@ class UserService {
       lastName,
       birthDate,
       profilePicture: userToSave.profilePicture,
-      admin: userToSave.admin
+      admin: userToSave.admin,
+      repositories: userToSave.repositories
     };
   }
 
@@ -63,7 +65,8 @@ class UserService {
       birthDate,
       password: hashedPassword,
       profilePicture: profilePicture || null,
-      admin: true, // Always set to true for admin users
+      admin: true,
+      repositories: [], // Initialize empty repositories array
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -76,21 +79,8 @@ class UserService {
       lastName,
       birthDate,
       profilePicture: userToSave.profilePicture,
-      admin: true
-    };
-  }
-
-  async getUser(username) {
-    const user = await redisClient.getUser(username);
-    if (!user) {
-      throw new Error('Usuario no encontrado');
-    }
-
-    // No retornar la contraseña
-    const { password, ...userWithoutPassword } = user;
-    return {
-      username,
-      ...userWithoutPassword
+      admin: true,
+      repositories: userToSave.repositories
     };
   }
 
@@ -106,6 +96,7 @@ class UserService {
       birthDate: updateData.birthDate || existingUser.birthDate,
       profilePicture: updateData.profilePicture !== undefined ? updateData.profilePicture : existingUser.profilePicture,
       admin: updateData.admin !== undefined ? updateData.admin : existingUser.admin,
+      repositories: existingUser.repositories || [], // Preserve repositories
       password: existingUser.password,
       createdAt: existingUser.createdAt,
       updatedAt: new Date().toISOString()
@@ -125,6 +116,156 @@ class UserService {
     };
   }
 
+  // Repository management methods
+  async addRepository(username, repositoryData) {
+    const existingUser = await redisClient.getUser(username);
+    if (!existingUser) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    const { name, description, language, isPublic = true } = repositoryData;
+    
+    if (!name) {
+      throw new Error('El nombre del repositorio es requerido');
+    }
+
+    // Check if repository name already exists for this user
+    if (existingUser.repositories && existingUser.repositories.some(repo => repo.name === name)) {
+      throw new Error('El usuario ya tiene un repositorio con ese nombre');
+    }
+
+    const newRepository = {
+      id: this.generateRepoId(),
+      name,
+      description: description || '',
+      language: language || '',
+      isPublic: Boolean(isPublic),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    const updatedUser = {
+      ...existingUser,
+      repositories: [...(existingUser.repositories || []), newRepository],
+      updatedAt: new Date().toISOString()
+    };
+
+    await redisClient.setUser(username, updatedUser);
+
+    return newRepository;
+  }
+
+  async getRepositories(username) {
+    const existingUser = await redisClient.getUser(username);
+    if (!existingUser) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    return existingUser.repositories || [];
+  }
+
+  async getRepository(username, repoId) {
+    const existingUser = await redisClient.getUser(username);
+    if (!existingUser) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    const repository = (existingUser.repositories || []).find(repo => repo.id === repoId);
+    if (!repository) {
+      throw new Error('Repositorio no encontrado');
+    }
+
+    return repository;
+  }
+
+  async updateRepository(username, repoId, updateData) {
+    const existingUser = await redisClient.getUser(username);
+    if (!existingUser) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    const repositories = existingUser.repositories || [];
+    const repoIndex = repositories.findIndex(repo => repo.id === repoId);
+    
+    if (repoIndex === -1) {
+      throw new Error('Repositorio no encontrado');
+    }
+
+    // Check if new name conflicts with other repositories
+    if (updateData.name && updateData.name !== repositories[repoIndex].name) {
+      const nameExists = repositories.some((repo, index) => 
+        index !== repoIndex && repo.name === updateData.name
+      );
+      if (nameExists) {
+        throw new Error('El usuario ya tiene un repositorio con ese nombre');
+      }
+    }
+
+    const updatedRepository = {
+      ...repositories[repoIndex],
+      ...updateData,
+      updatedAt: new Date().toISOString()
+    };
+
+    repositories[repoIndex] = updatedRepository;
+
+    const updatedUser = {
+      ...existingUser,
+      repositories,
+      updatedAt: new Date().toISOString()
+    };
+
+    await redisClient.setUser(username, updatedUser);
+
+    return updatedRepository;
+  }
+
+  async deleteRepository(username, repoId) {
+    const existingUser = await redisClient.getUser(username);
+    if (!existingUser) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    const repositories = existingUser.repositories || [];
+    const repoIndex = repositories.findIndex(repo => repo.id === repoId);
+    
+    if (repoIndex === -1) {
+      throw new Error('Repositorio no encontrado');
+    }
+
+    const deletedRepo = repositories[repoIndex];
+    const updatedRepositories = repositories.filter(repo => repo.id !== repoId);
+
+    const updatedUser = {
+      ...existingUser,
+      repositories: updatedRepositories,
+      updatedAt: new Date().toISOString()
+    };
+
+    await redisClient.setUser(username, updatedUser);
+
+    return { message: 'Repositorio eliminado exitosamente', repository: deletedRepo };
+  }
+
+  // Helper method to generate repository ID
+  generateRepoId() {
+    return `repo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  async getUser(username) {
+    const user = await redisClient.getUser(username);
+    if (!user) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    // No retornar la contraseña
+    const { password, ...userWithoutPassword } = user;
+    return {
+      username,
+      ...userWithoutPassword
+    };
+  }
+  
   async updateProfilePicture(username, profilePicture) {
     const existingUser = await redisClient.getUser(username);
     if (!existingUser) {
