@@ -25,19 +25,23 @@ import { init_cassandra,
     DataSet,
     approveDataSet,
     deleteDataSet,
-    getDatasetById,
     getDatasetsByName,
     cloneDatasetById,
-    getApprovedDatasets,
-    getPendingDatasets,
-    getDatasetsByAuthor} from './Databases/Mongodb/mongodb.js';
+    getApprovedDatasets,} from './Databases/Mongodb/mongodb.js';
   import mongoose from 'mongoose';
   import { GridFSBucket } from 'mongodb';
 
-  /* Neo4j */
-  import { init_neo4j, shutdown_neo4j, run_cypher, upsert_user, follow_user,
-         get_followers, upsert_dataset, get_followers_to_notify }
-  from './Databases/Neo4j/neo4j_methods.js';
+  /* Neo4J */
+import { 
+  init_neo4j, 
+  create_person, 
+  get_all_people,
+  find_person_by_name,
+  delete_person,
+  create_friendship,
+  get_friends,
+  check_neo4j_health 
+} from './Databases/Neo4j/neo4j_methods.js';
 
 const app = express();
 const port = process.env.API_PORT || 3000;
@@ -52,7 +56,7 @@ app.use(express.static('public'));
 //--------------Inicio funciones de MongoDB--------------------
 
 // Insertar un nuevo dataset
-app.post('/api/datasets/add_dataset', async (req, res) => {
+app.post('/api/add_dataset', async (req, res) => {
   try {
     const { 
       name, 
@@ -104,37 +108,6 @@ app.get('/api/datasets/approved', async (req, res) => {
     res.status(400).json({ error: e.message });
   }
 });
-
-// Obtener datasets por autor
-app.get('/api/datasets/by-author', async (req, res) => {
-  try {
-    const { author } = req.query;
-    if (!author) return res.status(400).json({ error: "Falta 'author' en query" });
-
-    const limit = req.query.limit ? Number(req.query.limit) : 0;
-    const skip  = req.query.skip  ? Number(req.query.skip)  : 0;
-
-    const results = await getDatasetsByAuthor({ limit, skip }, author);
-    res.json(results);
-  } catch (e) {
-    res.status(400).json({ error: e.message });
-  }
-});
-
-
-// Obtener datasets pendientes
-app.get('/api/datasets/pending', async (req, res) => {
-  try {
-    const limit = req.query.limit ? Number(req.query.limit) : 0;
-    const skip  = req.query.skip  ? Number(req.query.skip)  : 0;
-    const data  = await getPendingDatasets({ limit, skip });
-    res.json(data);
-  } catch (e) {
-    res.status(400).json({ error: e.message });
-  }
-});
-
-
 
 //Buscar datasets por nombre
 app.get('/api/datasets/by-name', async (req, res) => {
@@ -909,12 +882,123 @@ app.get('/api/get_latest_message', async (req, res) => {
   }
 });
 
-/*Cassandra methods end here*/
+
+/*Neo4J functions*/
+app.get('/neo4j/health', async (req, res) => {
+  try {
+    const health = await check_neo4j_health();
+    res.json(health);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/neo4j/person', async (req, res) => {
+  try {
+    const { name, lastName } = req.body;
+    
+    if (!name || !lastName) {
+      return res.status(400).json({ 
+        error: "Faltan campos requeridos: 'name' y 'lastName'" 
+      });
+    }
+    
+    const person = await create_person({ name, lastName });
+    res.status(201).json({
+      message: 'Persona creada exitosamente',
+      person
+    });
+  } catch (error) {
+    console.error('Error creando persona:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/neo4j/people', async (req, res) => {
+  try {
+    const people = await get_all_people();
+    res.json(people);
+  } catch (error) {
+    console.error('Error obteniendo personas:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/neo4j/people/search', async (req, res) => {
+  try {
+    const { name } = req.query;
+    
+    if (!name) {
+      return res.status(400).json({ error: "Falta parámetro 'name'" });
+    }
+    
+    const people = await find_person_by_name(name);
+    res.json(people);
+  } catch (error) {
+    console.error('Error buscando personas:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/neo4j/person/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!id) {
+      return res.status(400).json({ error: "Falta ID de persona" });
+    }
+    
+    const result = await delete_person(id);
+    res.json({ message: 'Persona eliminada exitosamente', result });
+  } catch (error) {
+    console.error('Error eliminando persona:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/neo4j/friendship', async (req, res) => {
+  try {
+    const { person1Id, person2Id } = req.body;
+    
+    if (!person1Id || !person2Id) {
+      return res.status(400).json({ 
+        error: "Faltan 'person1Id' y 'person2Id'" 
+      });
+    }
+    
+    const result = await create_friendship(person1Id, person2Id);
+    res.status(201).json({
+      message: 'Amistad creada exitosamente',
+      result
+    });
+  } catch (error) {
+    console.error('Error creando amistad:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/neo4j/person/:id/friends', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!id) {
+      return res.status(400).json({ error: "Falta ID de persona" });
+    }
+    
+    const friends = await get_friends(id);
+    res.json(friends);
+  } catch (error) {
+    console.error('Error obteniendo amigos:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/*Neo4J functions end here */
 async function startServer() {
   try {
     await connectMongo();
     await init_cassandra();
-    await init_neo4j();  
+    await init_neo4j();
     app.listen(port, () => {
       console.log(`App running at http://localhost:${port}`);
     });
