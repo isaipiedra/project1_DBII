@@ -177,8 +177,23 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             const result = await response.json();
+
+            let created_userid = result.user.username;
+
+            const response_node = await fetch(`${API_BASE_URL}/api/reg_user_graph`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id: created_userid,
+                    user_name: created_userid
+                })
+            });
+
+            const result_node = await response_node.json();
             
-            if (response.ok) {
+            if (response.ok && response_node.ok) {
                 // Registro exitoso
                 showSuccessMessage('Account created successfully! Redirecting to login...');
                 
