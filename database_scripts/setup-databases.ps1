@@ -1,7 +1,7 @@
 #!/usr/bin/env pwsh
 <#
 .SYNOPSIS
-    Script de configuración automática para MongoDB y Redis Cluster en Docker
+    Script de configuración automática para Redis Cluster en Docker
 
 .DESCRIPTION
     Este script automatiza la creación de la estructura de carpetas, archivos de configuración
@@ -78,18 +78,6 @@ function Initialize-DirectoryStructure {
         Write-ColorOutput "Directorio creado: Databases" "Green"
     }
     
-    # Estructura para MongoDB
-    $mongoDir = Join-Path $DatabasesDir "mongo"
-    $mongoDataDir = Join-Path $mongoDir "data"
-    
-    if (-not (Test-Path $mongoDir)) {
-        New-Item -ItemType Directory -Force -Path $mongoDir | Out-Null
-        New-Item -ItemType Directory -Force -Path $mongoDataDir | Out-Null
-        New-Item -ItemType Directory -Force -Path (Join-Path $mongoDataDir "mongo1") | Out-Null
-        New-Item -ItemType Directory -Force -Path (Join-Path $mongoDataDir "mongo2") | Out-Null
-        Write-ColorOutput "Directorio creado: Databases/mongo" "Green"
-    }
-    
     # Estructura para Redis Replication
     $redisDir = Join-Path $DatabasesDir "redis"
     $redisDataDir = Join-Path $redisDir "data"
@@ -106,89 +94,6 @@ function Initialize-DirectoryStructure {
     $scriptsDir = Join-Path $ProjectRoot "scripts"
     if (-not (Test-Path $scriptsDir)) {
         New-Item -ItemType Directory -Force -Path $scriptsDir | Out-Null
-    }
-}
-
-function Create-MongoDBFiles {
-    $mongoDir = Join-Path $DatabasesDir "mongo"
-    
-    # docker-compose.yml para MongoDB
-    $mongoCompose = @'
-services:
-  mongo1:
-    image: mongo:7.0
-    container_name: mongo1
-    hostname: mongo1
-    command: ["mongod", "--bind_ip_all", "--replSet", "rs0"]
-    ports:
-      - "27017:27017"
-    volumes:
-      - ./data/mongo1:/data/db
-    networks:
-      - db-network
-    healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--host", "localhost", "--eval", "db.runCommand({ ping: 1 }).ok"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
-
-  mongo2:
-    image: mongo:7.0
-    container_name: mongo2
-    hostname: mongo2
-    command: ["mongod", "--bind_ip_all", "--replSet", "rs0"]
-    ports:
-      - "27018:27017"
-    volumes:
-      - ./data/mongo2:/data/db
-    networks:
-      - db-network
-    healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--host", "localhost", "--eval", "db.runCommand({ ping: 1 }).ok"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
-
-  rs-init:
-    image: mongo:7.0
-    container_name: rs-init
-    depends_on:
-      mongo1:
-        condition: service_healthy
-      mongo2:
-        condition: service_healthy
-    restart: "no"
-    networks:
-      - db-network
-    entrypoint: [ "bash", "-lc" ]
-    command: >
-      mongosh --host mongo1 --quiet --eval 'try{rs.status()}catch(e){0}' | grep -q '"ok" : 1'
-      || mongosh --host mongo1 --quiet --eval '
-        const cfg={_id:"rs0",members:[
-          {_id:0,host:"mongo1:27017",priority:2},
-          {_id:1,host:"mongo2:27017",priority:1},
-        ]};
-        print("Initiating replica set…");
-        rs.initiate(cfg);
-        for (let i=0;i<30;i++){
-          try{
-            const s=rs.status();
-            const p=s.members.find(m=>m.stateStr==="PRIMARY");
-            if(p){print("PRIMARY:",p.name);quit(0);}
-          }catch(_){}
-          sleep(1000);
-        }
-        print("Timed out waiting PRIMARY"); quit(1);
-      '
-
-networks:
-  db-network:
-    driver: bridge
-'@
-
-    if (-not (Test-Path (Join-Path $mongoDir "docker-compose.yml"))) {
-        $mongoCompose | Out-File -FilePath (Join-Path $mongoDir "docker-compose.yml") -Encoding UTF8
-        Write-ColorOutput "Archivo creado: Databases/mongo/docker-compose.yml" "Green"
     }
 }
 
@@ -235,41 +140,6 @@ replica-read-only yes
 function Create-GlobalCompose {
     $globalCompose = @'
 services:
-  # MongoDB Services
-  mongo1:
-    image: mongo:7.0
-    container_name: mongo1
-    hostname: mongo1
-    command: ["mongod", "--bind_ip_all", "--replSet", "rs0"]
-    ports:
-      - "27017:27017"
-    volumes:
-      - ./mongo/data/mongo1:/data/db
-    networks:
-      - db-network
-    healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--host", "localhost", "--eval", "db.runCommand({ ping: 1 }).ok"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
-
-  mongo2:
-    image: mongo:7.0
-    container_name: mongo2
-    hostname: mongo2
-    command: ["mongod", "--bind_ip_all", "--replSet", "rs0"]
-    ports:
-      - "27018:27017"
-    volumes:
-      - ./mongo/data/mongo2:/data/db
-    networks:
-      - db-network
-    healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--host", "localhost", "--eval", "db.runCommand({ ping: 1 }).ok"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
-
   # Redis Master Node
   redis-master:
     image: redis:7.2-alpine
@@ -314,39 +184,6 @@ services:
       timeout: 3s
       retries: 5
 
-  # Replica Set Initialization
-  rs-init:
-    image: mongo:7.0
-    container_name: rs-init
-    depends_on:
-      mongo1:
-        condition: service_healthy
-      mongo2:
-        condition: service_healthy
-    restart: "no"
-    networks:
-      - db-network
-    entrypoint: [ "bash", "-lc" ]
-    command: >
-      mongosh --host mongo1 --quiet --eval 'try{rs.status()}catch(e){0}' | grep -q '"ok" : 1'
-      || mongosh --host mongo1 --quiet --eval '
-        const cfg={_id:"rs0",members:[
-          {_id:0,host:"mongo1:27017",priority:2},
-          {_id:1,host:"mongo2:27017",priority:1},
-        ]};
-        print("Initiating replica set…");
-        rs.initiate(cfg);
-        for (let i=0;i<30;i++){
-          try{
-            const s=rs.status();
-            const p=s.members.find(m=>m.stateStr==="PRIMARY");
-            if(p){print("PRIMARY:",p.name);quit(0);}
-          }catch(_){}
-          sleep(1000);
-        }
-        print("Timed out waiting PRIMARY"); quit(1);
-      '
-
 networks:
   db-network:
     driver: bridge
@@ -360,9 +197,6 @@ networks:
 function Create-EnvironmentFiles {
     # .env.example en la raíz del proyecto
     $envExample = @'
-# MongoDB Configuration
-MONGO_URI=mongodb://localhost:27017/?replicaSet=rs0
-
 # Redis Cluster Configuration
 REDIS_CLUSTER_HOSTS=localhost:6379,localhost:6380
 REDIS_URL=redis://localhost:6379,localhost:6380
@@ -394,7 +228,6 @@ REDIS_CLUSTER=true
     # .gitignore si no existe
     if (-not (Test-Path (Join-Path $ProjectRoot ".gitignore"))) {
         $gitignore = @'
-Databases/mongo/data/
 Databases/redis/data/
 .env
 *.log
@@ -411,7 +244,6 @@ function Initialize-Environment {
     Write-ColorOutput "Inicializando entorno del proyecto..." "Cyan"
     
     Initialize-DirectoryStructure
-    Create-MongoDBFiles
     Create-RedisClusterFiles
     Create-GlobalCompose
     Create-EnvironmentFiles
@@ -652,10 +484,8 @@ function Clean-Services {
         
         # Eliminar datos pero mantener la estructura
         $dataDirs = @(
-            (Join-Path $DatabasesDir "mongo/data/mongo1"),
-            (Join-Path $DatabasesDir "mongo/data/mongo2"), 
-            (Join-Path $DatabasesDir "redis/data/redis1"),
-            (Join-Path $DatabasesDir "redis/data/redis2")
+            (Join-Path $DatabasesDir "redis/data/master"),
+            (Join-Path $DatabasesDir "redis/data/replica")
         )
         
         foreach ($dir in $dataDirs) {
@@ -677,13 +507,6 @@ function Show-ServicesStatus {
     Push-Location $DatabasesDir
     try {
         docker-compose -f global-compose.yml ps
-        
-        Write-ColorOutput "`nRedis Cluster Info:" "Cyan"
-        try {
-            docker exec redis1 redis-cli cluster info
-        } catch {
-            Write-ColorOutput "No se pudo obtener información del cluster" "Yellow"
-        }
         
         Write-ColorOutput "`nLogs recientes:" "Cyan"
         docker-compose -f global-compose.yml logs --tail=3

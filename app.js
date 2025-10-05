@@ -31,6 +31,9 @@ import { init_cassandra,
   import mongoose from 'mongoose';
   import { GridFSBucket } from 'mongodb';
 
+  /*Cassandra */
+  const { createUser } = require('./neo4j-services');
+
 const app = express();
 const port = process.env.API_PORT || 3000;
 
@@ -871,6 +874,13 @@ app.get('/api/get_latest_message', async (req, res) => {
 });
 
 /*Cassandra methods end here*/
+/* Neo4j functions */
+
+
+
+/* Neo4j functions end here*/
+
+
 async function startServer() {
   try {
     await connectMongo();
