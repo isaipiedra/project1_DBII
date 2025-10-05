@@ -18,6 +18,7 @@ notification_opener.addEventListener('click', () => {
 document.addEventListener('DOMContentLoaded', function() {
     const searchBar = document.getElementById('search_bar');
     const searchSection = document.getElementById('search_bar_section');
+    const main_post_feed = document.querySelector('#main_post_feed');
     
     // Create search results container
     const searchResults = document.createElement('div');
@@ -110,4 +111,125 @@ document.addEventListener('DOMContentLoaded', function() {
         div.textContent = text;
         return div.innerHTML;
     }
+
+    //Create a new post 
+    function createPost(creator_pfp, data_username, data_fileCount, data_date, data_title, data_description) {
+        // Create main post container
+        const postElement = document.createElement('div');
+        postElement.className = 'post';
+        
+        // Create post header
+        const postHeader = document.createElement('div');
+        postHeader.className = 'post_header';
+        
+        // Create user info section
+        const userInfo = document.createElement('div');
+        userInfo.className = 'post_header_userinfo';
+        
+        const userIcon = document.createElement('img');
+        userIcon.src = creator_pfp;
+        userIcon.style = 'border-radius: 50%';
+        userIcon.setAttribute('width','40');
+        
+        const username = document.createElement('p');
+        username.textContent = data_username;
+        
+        userInfo.appendChild(userIcon);
+        userInfo.appendChild(username);
+        
+        // Create post info section
+        const postInfo = document.createElement('div');
+        postInfo.className = 'post_header_postinfo';
+        
+        const fileCount = document.createElement('h5');
+        fileCount.textContent = `${data_fileCount} files`;
+        
+        const postDate = document.createElement('p');
+        postDate.textContent = data_date;
+        
+        postInfo.appendChild(fileCount);
+        postInfo.appendChild(postDate);
+        
+        // Assemble header
+        postHeader.appendChild(userInfo);
+        postHeader.appendChild(postInfo);
+        
+        // Create description section
+        const postDescription = document.createElement('div');
+        postDescription.className = 'post_description';
+        
+        const title = document.createElement('h3');
+        title.textContent = data_title;
+        
+        const description = document.createElement('p');
+        description.textContent = data_description;
+        
+        postDescription.appendChild(title);
+        postDescription.appendChild(description);
+        
+        // Create see more section
+        const postSeeMore = document.createElement('div');
+        postSeeMore.className = 'post_seemore';
+        
+        const link = document.createElement('a');
+        link.href = 'repository_info.html';
+        
+        const button = document.createElement('button');
+        button.className = 'seemore_btn';
+        button.textContent = 'See more';
+        
+        link.appendChild(button);
+        postSeeMore.appendChild(link);
+        
+        // Assemble complete post
+        postElement.appendChild(postHeader);
+        postElement.appendChild(postDescription);
+        postElement.appendChild(postSeeMore);
+        
+        return postElement;
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+        const year = date.getFullYear();
+        
+        return `${day}/${month}/${year}`;
+    }
+
+    //Fill posts section 
+    async function fillPostSection() {
+        let new_post;
+        try {
+            const response = await fetch('http://localhost:3000/api/datasets/approved', {method:'GET'});
+            const result = await response.json();
+
+            for (const dataset of result) {
+                let creator_pfp, data_username;
+                try {
+                    const user_creator = await fetch(`http://localhost:3000/users/${dataset.author}`, {method:'GET'}); 
+                    const creator = await user_creator.json();
+
+                    creator_pfp = creator.profilePicture;
+                    data_username = creator.username;
+                } catch (err) {
+                    console.error(err);
+                }
+
+                let data_fileCount = dataset.archivos.length;
+                let data_date = formatDate(dataset.date);
+                let data_title = dataset.name;
+                let data_description = dataset.description;
+
+                new_post = createPost(creator_pfp, data_username, data_fileCount, data_date, data_title, data_description);
+            }
+        } catch (err) {
+            console.error(err);
+        } 
+
+        main_post_feed.appendChild(new_post);
+    }
+
+    fillPostSection();
 });
