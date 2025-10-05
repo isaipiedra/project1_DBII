@@ -1169,23 +1169,6 @@ app.get('/api/get_who_I_follow', async (req, res)=>{
   }
 });
 
-app.put('/api/notify_followers', async (req, res)=>{
-  try{
-    const {id_user} = req.query;
-    if(!id_user){
-      return res.status(400).json({error: "Falta id_user"});
-    }
-    const result = await dataset_uploaded_notify({id_user});
-    res.json(result);
-  }catch(error){
-    console.error('Error en notify_followers', error.message);
-    res.status(500).json({error: 'Error al notificar seguidores'});
-  }
-
-
-});
-
-
 
 //Notifies all the followers that a dataset was uploaded
 app.put('/api/notify_dataset_upload', async (req, res) => {
