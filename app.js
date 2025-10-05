@@ -37,7 +37,8 @@ import { init_cassandra,
   import { GridFSBucket } from 'mongodb';
 
   /*Neo4j */
-  import { createUserNode, followUser, get_followers_by_id, get_who_I_follow } from './Databases/Neo4j/neo4j_methods.js';
+  import { createUserNode, followUser, get_followers_by_id, get_who_I_follow, 
+    dataset_uploaded_notify, dataset_notification_checked, get_new_notification_dataset, unfollowUser } from './Databases/Neo4j/neo4j_methods.js';
 
 
 const app = express();
@@ -1165,6 +1166,89 @@ app.get('/api/get_who_I_follow', async (req, res)=>{
   }catch (error){
     console.error('Error en get_who_I_follow:', error.message);
     res.status(500).json({ error: 'Error al buscar seguidores' });
+  }
+});
+
+app.put('/api/notify_followers', async (req, res)=>{
+  try{
+    const {id_user} = req.query;
+    if(!id_user){
+      return res.status(400).json({error: "Falta id_user"});
+    }
+    const result = await dataset_uploaded_notify({id_user});
+    res.json(result);
+  }catch(error){
+    console.error('Error en notify_followers', error.message);
+    res.status(500).json({error: 'Error al notificar seguidores'});
+  }
+
+
+});
+
+
+
+//Notifies all the followers that a dataset was uploaded
+app.put('/api/notify_dataset_upload', async (req, res) => {
+  try {
+    const { id_user } = req.body;
+    if (!id_user) {
+      return res.status(400).json({ error: "Falta 'id_user'" });
+    }
+
+    const result = await dataset_uploaded_notify({ id_user });
+    res.json(result);
+  } catch (error) {
+    console.error('Error en notify_dataset_upload:', error);
+    res.status(500).json({ error: 'Error al notificar subida de dataset' });
+  }
+});
+
+
+/*Marks the notifications as "Checked", it receives the user's id */
+app.put('/api/dataset_notification_checked', async (req, res) => {
+  try {
+    const { id_user } = req.body;
+    if (!id_user) {
+      return res.status(400).json({ error: "Falta 'id_user'" });
+    }
+
+    const result = await dataset_notification_checked({ id_user });
+    res.json(result);
+  } catch (error) {
+    console.error('Error en clear_dataset_notifications:', error);
+    res.status(500).json({ error: 'Error al limpiar notificaciones' });
+  }
+});
+
+
+/*Returns the followed user which uploaded a database recently */
+app.get('/api/get_new_dataset_notifications', async (req, res) => {
+  try {
+    const { id_user } = req.query;
+    if (!id_user) {
+      return res.status(400).json({ error: "Falta 'id_user'" });
+    }
+
+    const result = await get_new_notification_dataset({ id_user });
+    res.json(result);
+  } catch (error) {
+    console.error('Error en get_new_dataset_notifications:', error);
+    res.status(500).json({ error: 'Error al obtener notificaciones nuevas' });
+  }
+});
+
+app.delete('/api/unfollow_user', async (req, res) => {
+  try {
+    const { id_user, id_user_to_unfollow } = req.query;
+    if (!id_user || !id_user_to_unfollow) {
+      return res.status(400).json({ error: "Faltan 'id_user' o 'id_user_to_unfollow'" });
+    }
+    const result = await unfollowUser({ id_user, id_user_to_unfollow });
+    const code = result.success ? 200 : 400;
+    res.status(code).json(result);
+  } catch (error) {
+    console.error('Error en unfollow_user:', error);
+    res.status(500).json({ error: 'Error al dejar de seguir usuario' });
   }
 });
 
