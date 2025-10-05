@@ -187,7 +187,9 @@ async function insertDataSetGridFS({
     videos: videosMeta
   });
 
-  const resultado = await doc.save();
+  const document = await doc.save();
+  const resultado = document._id.toString();
+
   return resultado;
 }
 
@@ -326,11 +328,13 @@ const videosPaths     = [
       videosPaths
     });
 
-    console.log('DataSet _id:', saved._id.toString());
-    if (saved.foto_avatar)      console.log('   avatar file_id:',      saved.foto_avatar.file_id.toString());
-    if (saved.foto_descripcion) console.log('   descripcion file_id:', saved.foto_descripcion.file_id.toString());
-    saved.archivos?.forEach(a => console.log('   archivo file_id:', a.file_id.toString()));
-    saved.videos?.forEach(v => console.log('   video   file_id:', v.file_id.toString()));
+    console.log('DataSet _id:', saved);
+    
+    //if (saved.foto_avatar)      console.log('   avatar file_id:',      saved.foto_avatar.file_id.toString());
+    //if (saved.foto_descripcion) console.log('   descripcion file_id:', saved.foto_descripcion.file_id.toString());
+    //saved.archivos?.forEach(a => console.log('   archivo file_id:', a.file_id.toString()));
+    //saved.videos?.forEach(v => console.log('   video   file_id:', v.file_id.toString()));
+    
   } catch (e) {
     console.error('Error en prueba:', e);
   } finally {
