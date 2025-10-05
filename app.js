@@ -34,7 +34,7 @@ import { init_cassandra,
   import { GridFSBucket } from 'mongodb';
 
   /*Neo4j */
-  import { createUser, followUser } from './Databases/Neo4j/neo4j_methods.js';
+  import { createUserNode, followUser } from './Databases/Neo4j/neo4j_methods.js';
 
 
 const app = express();
@@ -1047,7 +1047,7 @@ app.post('/api/reg_user_graph', async (req, res) => {
       });
     }
     
-    const result = await createUser({ id, user_name });
+    const result = await createUserNode({ id, user_name });
     
     if (result.success) {
       return res.status(201).json(result);
