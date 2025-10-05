@@ -31,8 +31,9 @@ import { init_cassandra,
   import mongoose from 'mongoose';
   import { GridFSBucket } from 'mongodb';
 
-  /*Cassandra */
-  const { createUser } = require('./neo4j-services');
+  /*Neo4j */
+  import { createUser } from './Databases/Neo4j/neo4j_methods.js';
+
 
 const app = express();
 const port = process.env.API_PORT || 3000;
@@ -875,6 +876,34 @@ app.get('/api/get_latest_message', async (req, res) => {
 
 /*Cassandra methods end here*/
 /* Neo4j functions */
+app.post('/api/users_graph', async (req, res) => {
+  try {
+    const { id, user_name } = req.body;
+    
+    if (!id || !user_name) {
+      return res.status(400).json({
+        success: false,
+        message: 'id y user_name son requeridos'
+      });
+    }
+    
+    const result = await createUser({ id, user_name });
+    
+    if (result.success) {
+      return res.status(201).json(result);
+    } else {
+      return res.status(500).json(result);
+    }
+    
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error al crear usuario',
+      error: error.message
+    });
+  }
+});
 
 
 
