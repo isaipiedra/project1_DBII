@@ -37,7 +37,7 @@ import { init_cassandra,
   import { GridFSBucket } from 'mongodb';
 
   /*Neo4j */
-  import { createUserNode, followUser } from './Databases/Neo4j/neo4j_methods.js';
+  import { createUserNode, followUser, get_followers_by_id, get_who_I_follow } from './Databases/Neo4j/neo4j_methods.js';
 
 
 const app = express();
@@ -1091,6 +1091,7 @@ app.get('/api/get_latest_message', async (req, res) => {
 });
 
 /*Cassandra methods end here*/
+
 /* Neo4j functions */
 app.post('/api/reg_user_graph', async (req, res) => {
   try {
@@ -1136,10 +1137,38 @@ app.post('/api/follow_user', async (req, res) => {
   }
 });
 
+app.get('/api/get_followers_by_id', async (req, res) => {
+  try {
+    const { id_user } = req.query;
+    if (!id_user) {
+      return res.status(400).json({ error: "Falta 'id_user'" });
+    }
+
+    const result = await get_followers_by_id({ id_user });
+    res.json(result);
+  } catch (error) {
+    console.error('Error en get_followers_by_id:', error.message);
+    res.status(500).json({ error: 'Error al buscar seguidores' });
+  }
+});
+
+
+app.get('/api/get_who_I_follow', async (req, res)=>{
+  try{
+    const {id_user} = req.query;
+    if(!id_user){
+      return res.status(400).json({error: "Falta 'id_user'"});
+    }
+
+    const result = await get_who_I_follow({id_user});
+    res.json(result);
+  }catch (error){
+    console.error('Error en get_who_I_follow:', error.message);
+    res.status(500).json({ error: 'Error al buscar seguidores' });
+  }
+});
 
 /* Neo4j functions end here*/
-
-
 async function startServer() {
   try {
     await connectMongo();
