@@ -123,7 +123,7 @@ class UserService {
       throw new Error('Usuario no encontrado');
     }
 
-    const { name, description, language, isPublic = true } = repositoryData;
+    const { id, name, description, language, isPublic = true } = repositoryData;
     
     if (!name) {
       throw new Error('El nombre del repositorio es requerido');
@@ -135,7 +135,7 @@ class UserService {
     }
 
     const newRepository = {
-      id: this.generateRepoId(),
+      id: id,
       name,
       description: description || '',
       language: language || '',

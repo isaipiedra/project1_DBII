@@ -57,12 +57,12 @@
             <div>
                 <a href="desktop.html"><i class='bx bx-chevron-left' id="user_back_arrow"></i></a>              
             </div>        
-            <h1><input type="text" value="Repository name" id="repo_name" disabled><i class="bx bxs-pencil" id="edit_repo_name"></i></h1>
+            <h1><input type="text" value="Repository name" id="repo_name"><i class="bx bx-image-add" id="edit_repo_image"></i><input type="file" id="repo_image_input" style="display: none;" accept="image/*"></h1>
         </section>
 
         <div id="repository_details">
-            <p>Owner: My username</p>
-            <p>Archivos: 3</p>
+            <p id="details_owner">Owner: My username</p>
+            <p id="details_file_amount">Files: 0</p>
         </div>
 
         <div id="main_info">
@@ -76,13 +76,13 @@
                         
                     </div>
                     <div class="left_btns">
-                        <button class="play_btn">Upload guide</button>
-                        <button class="download_btn">Upload files</button>
+                        <button class="play_btn" id="upload_videos_btn" type="button">Upload guide</button><input type="file" id="repo_videos_input" style="display: none;" accept="video/*" multiple>
+                        <button class="download_btn" id="upload_files_btn" type="button">Upload files</button><input type="file" id="repo_files_input" style="display: none;" multiple>
                     </div>
                 </section>
                 <section id="repository_files">
                     <ul id="repository_file_list">
-                        <li class="repository_file_item">
+                        <!-- <li class="repository_file_item">
                             <p>File name 1</p>
                             <div class="file_item_details">
                                 <p>23k</p>
@@ -99,7 +99,7 @@
                             <div class="file_item_details">
                                 <p>23k</p>
                             </div>
-                        </li>
+                        </li> -->
                     </ul>
                 </section>
             </article>

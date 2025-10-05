@@ -223,12 +223,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 let data_description = dataset.description;
 
                 new_post = createPost(creator_pfp, data_username, data_fileCount, data_date, data_title, data_description);
+                main_post_feed.appendChild(new_post);
             }
         } catch (err) {
             console.error(err);
         } 
-
-        main_post_feed.appendChild(new_post);
     }
 
     fillPostSection();

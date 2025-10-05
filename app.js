@@ -1,6 +1,9 @@
 import express, { json } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import userService from './src/userService.js';
 import redisClient from './src/redisClient.js';
 
@@ -42,32 +45,63 @@ const port = process.env.API_PORT || 3000;
 
 // Middleware
 app.use(cors());
-app.use(json({ limit: '10mb' })); // Aumentar de 100kb a 10mb
 app.use(express.static('public'));
 
+// Express configuration for large payloads
+app.use(express.json({ limit: '1gb' }));
+app.use(express.urlencoded({ extended: true, limit: '1gb' }));
+
+// Multer configuration for large files
+const upload = multer({
+  dest: 'temp_uploads/',
+  limits: {
+    fileSize: 1 * 1024 * 1024 * 1024, // 1GB per file
+    files: 20, // Maximum 20 files total
+    fields: 10, // Maximum 10 non-file fields
+  }
+});
 // Routes
 
 //--------------Inicio funciones de MongoDB--------------------
 
 // Insertar un nuevo dataset
-app.post('/api/add_dataset', async (req, res) => {
+app.post('/api/add_dataset', upload.fields([
+  { name: 'avatar', maxCount: 1 },
+  { name: 'descripcion', maxCount: 1 },
+  { name: 'archivos', maxCount: 20 },
+  { name: 'videos', maxCount: 10 }
+]), async (req, res) => {
   try {
+    // Get text fields from form data
     const { 
       name, 
       description, 
       author, 
       status, 
-      size, 
-      avatarPath, 
-      descripcionPath, 
-      archivosPaths = [], 
-      videosPaths = [] 
+      size
     } = req.body;
 
+    // Get uploaded files
+    const files = req.files;
+
+    // Validate required fields
     if (!name || !description || !author) {
+      // Clean up uploaded files if validation fails
+      if (files) {
+        Object.values(files).flat().forEach(file => {
+          fs.unlinkSync(file.path);
+        });
+      }
       return res.status(400).json({ error: "Faltan campos requeridos: 'name', 'description' o 'author'." });
     }
 
+    // Process file paths for your existing function
+    const avatarPath = files.avatar ? files.avatar[0].path : null;
+    const descripcionPath = files.descripcion ? files.descripcion[0].path : null;
+    const archivosPaths = files.archivos ? files.archivos.map(f => f.path) : [];
+    const videosPaths = files.videos ? files.videos.map(f => f.path) : [];
+
+    // Use your existing insert function with temporary file paths
     const saved = await insertDataSetGridFS({
       name,
       description,
@@ -81,9 +115,31 @@ app.post('/api/add_dataset', async (req, res) => {
       videosPaths
     });
 
+    // Clean up temporary files after successful insertion
+    if (files) {
+      Object.values(files).flat().forEach(file => {
+        try {
+          fs.unlinkSync(file.path);
+        } catch (cleanupError) {
+          console.warn('Warning: Could not delete temporary file:', file.path);
+        }
+      });
+    }
+
     res.json(saved);
 
   } catch (err) {
+    // Clean up temporary files on error
+    if (req.files) {
+      Object.values(req.files).flat().forEach(file => {
+        try {
+          fs.unlinkSync(file.path);
+        } catch (cleanupError) {
+          console.warn('Warning: Could not delete temporary file:', file.path);
+        }
+      });
+    }
+
     console.error("add_dataset error:", err);
     res.status(500).json({ error: "Error insertando dataset" });
   }
