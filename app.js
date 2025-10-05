@@ -27,7 +27,9 @@ import { init_cassandra,
     deleteDataSet,
     getDatasetsByName,
     cloneDatasetById,
-    getApprovedDatasets,} from './Databases/Mongodb/mongodb.js';
+    getApprovedDatasets,
+    getPendingDatasets,
+    getDatasetsByAuthor} from './Databases/Mongodb/mongodb.js';
   import mongoose from 'mongoose';
   import { GridFSBucket } from 'mongodb';
 
@@ -95,6 +97,38 @@ app.get('/api/datasets/approved', async (req, res) => {
     const skip  = req.query.skip  ? Number(req.query.skip)  : 0;
     const data  = await getApprovedDatasets({ limit, skip });
     res.json(data);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Mostrar todos los datasets pendientes
+app.get('/api/datasets/pending', async (req, res) => {
+  try {
+    const limit = req.query.limit ? Number(req.query.limit) : 0; // 0 = sin límite
+    const skip  = req.query.skip  ? Number(req.query.skip)  : 0;
+    const data  = await getPendingDatasets({ limit, skip });
+    res.json(data);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Obtener datasets por autor
+app.get('/api/datasets/by-author', async (req, res) => {
+  try {
+    const { author } = req.query;
+    if (!author) return res.status(400).json({ error: "Falta 'author' en query" });
+
+    const limit = req.query.limit ? Number(req.query.limit) : 0;
+    const skip  = req.query.skip  ? Number(req.query.skip)  : 0;
+
+    const results = await getDatasetsByAuthor({ 
+      limit, 
+      skip, 
+      autor: author 
+    });
+    res.json(results);
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
