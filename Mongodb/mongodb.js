@@ -300,13 +300,13 @@ export { connectMongo, getBucket, insertDataSetGridFS, DataSet, approveDataSet,
 
 /* ================== prueba de funcionamiento ================== */
 /*
-const avatarPath      = 'C:/Users/Gabriel/Pictures/Roblox/RobloxScreenShot20250701_000430587.png';
-const descripcionPath = 'C:/Users/Gabriel/Pictures/Roblox/RobloxScreenShot20250414_202948781.png';
+const avatarPath      = 'C:/Users/isaip/Downloads/cilantro.jpg';
+const descripcionPath = 'C:/Users/isaip/Downloads/cilantro.jpg';
 const archivosPaths   = [
-  'C:/Users/Gabriel/Downloads/Lectura06GabrielUreña.pdf'
+  'C:/Users/isaip/Downloads/DBII-Project1-Diagrams.drawio.pdf'
 ];
 const videosPaths     = [
-  "C:/Users/Gabriel/Videos/2025-09-09 15-11-57.mp4"
+  "C:/Users/isaip/Downloads/peter_horse.mp4"
 ];
 
 (async () => {
@@ -337,8 +337,8 @@ const videosPaths     = [
     await mongoose.disconnect();
     console.log('Conexión cerrada');
   }
-})();
-*/
+})();*/
+
 /*
 (async () => {
   try {

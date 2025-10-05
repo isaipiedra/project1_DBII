@@ -331,6 +331,26 @@ app.put('/users/:username', async (req, res) => {
   }
 });
 
+app.get('/api/users/search', async (req, res) => {
+    try {
+        const { query } = req.query;
+        if (!query) {
+            return res.status(400).json({ error: "Search query is required" });
+        }
+
+        // Get all users and filter by username
+        const allUsers = await userService.getAllUsers();
+        const filteredUsers = allUsers.filter(user => 
+            user.username.toLowerCase().includes(query.toLowerCase())
+        ).slice(0, 10); // Limit to 10 results
+
+        res.json(filteredUsers);
+    } catch (error) {
+        console.error('User search error:', error);
+        res.status(500).json({ error: 'Error searching users' });
+    }
+});
+
 // Eliminar usuario
 app.delete('/users/:username', async (req, res) => {
   try {
@@ -544,6 +564,115 @@ app.get('/users/:username/is-admin', async (req, res) => {
 
   } catch (error) {
     console.error('Error verificando administrador:', error.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Rutas de Repositorios (still redis)
+
+// Obtener todos los repositorios de un usuario
+app.get('/users/:username/repositories', async (req, res) => {
+  try {
+    const { username } = req.params;
+    const repositories = await userService.getRepositories(username);
+    res.json(repositories);
+  } catch (error) {
+    console.error('Error obteniendo repositorios:', error.message);
+    
+    if (error.message === 'Usuario no encontrado') {
+      return res.status(404).json({ error: error.message });
+    }
+    
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Obtener un repositorio específico
+app.get('/users/:username/repositories/:repoId', async (req, res) => {
+  try {
+    const { username, repoId } = req.params;
+    const repository = await userService.getRepository(username, repoId);
+    res.json(repository);
+  } catch (error) {
+    console.error('Error obteniendo repositorio:', error.message);
+    
+    if (error.message === 'Usuario no encontrado' || error.message === 'Repositorio no encontrado') {
+      return res.status(404).json({ error: error.message });
+    }
+    
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Crear un nuevo repositorio
+app.post('/users/:username/repositories', async (req, res) => {
+  try {
+    const { username } = req.params;
+    const repositoryData = req.body;
+
+    const result = await userService.addRepository(username, repositoryData);
+
+    res.status(201).json({
+      message: 'Repositorio creado exitosamente',
+      repository: result
+    });
+  } catch (error) {
+    console.error('Error creando repositorio:', error.message);
+    
+    if (error.message === 'Usuario no encontrado') {
+      return res.status(404).json({ error: error.message });
+    }
+    if (error.message === 'El nombre del repositorio es requerido') {
+      return res.status(400).json({ error: error.message });
+    }
+    if (error.message === 'El usuario ya tiene un repositorio con ese nombre') {
+      return res.status(409).json({ error: error.message });
+    }
+    
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Actualizar un repositorio
+app.put('/users/:username/repositories/:repoId', async (req, res) => {
+  try {
+    const { username, repoId } = req.params;
+    const updateData = req.body;
+
+    const result = await userService.updateRepository(username, repoId, updateData);
+
+    res.json({
+      message: 'Repositorio actualizado exitosamente',
+      repository: result
+    });
+  } catch (error) {
+    console.error('Error actualizando repositorio:', error.message);
+    
+    if (error.message === 'Usuario no encontrado' || error.message === 'Repositorio no encontrado') {
+      return res.status(404).json({ error: error.message });
+    }
+    if (error.message === 'El usuario ya tiene un repositorio con ese nombre') {
+      return res.status(409).json({ error: error.message });
+    }
+    
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Eliminar un repositorio
+app.delete('/users/:username/repositories/:repoId', async (req, res) => {
+  try {
+    const { username, repoId } = req.params;
+
+    const result = await userService.deleteRepository(username, repoId);
+    res.json(result);
+  } catch (error) {
+    console.error('Error eliminando repositorio:', error.message);
+    
+    if (error.message === 'Usuario no encontrado' || error.message === 'Repositorio no encontrado') {
+      return res.status(404).json({ error: error.message });
+    }
+    
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });

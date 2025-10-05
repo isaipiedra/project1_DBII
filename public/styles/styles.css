@@ -2073,10 +2073,11 @@ html {
 
 .delete_btn {
     color: var(--delete-button);
+    color: var(--white);
 }
 
 .delete_btn:hover {
-    background-color: var(--delete-button);
+    background-color: var(--hover-delete-button);
     color: var(--white);
 }
 
