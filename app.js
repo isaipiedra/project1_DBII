@@ -34,7 +34,7 @@ import { init_cassandra,
   import { GridFSBucket } from 'mongodb';
 
   /*Neo4j */
-  import { createUser } from './Databases/Neo4j/neo4j_methods.js';
+  import { createUser, followUser } from './Databases/Neo4j/neo4j_methods.js';
 
 
 const app = express();
@@ -555,9 +555,6 @@ app.use((err, req, res, next) => {
 });
 
 // Ruta no encontrada
-app.use((req, res) => {
-  res.status(404).json({ error: 'Ruta no encontrada' });
-});
 
 
 //------------- Cassandra methods start here -------------
@@ -910,7 +907,7 @@ app.get('/api/get_latest_message', async (req, res) => {
 
 /*Cassandra methods end here*/
 /* Neo4j functions */
-app.post('/api/users_graph', async (req, res) => {
+app.post('/api/reg_user_graph', async (req, res) => {
   try {
     const { id, user_name } = req.body;
     
@@ -939,6 +936,20 @@ app.post('/api/users_graph', async (req, res) => {
   }
 });
 
+app.post('/api/follow_user', async (req, res) => {
+  try {
+    const { id_user, id_user_to_follow } = req.body;
+    if (!id_user || !id_user_to_follow) {
+      return res.status(400).json({ error: "Faltan 'id_user' o 'id_user_to_follow'" });
+    }
+
+    const result = await followUser({ id_user, id_user_to_follow });
+    res.json(result);
+  } catch (error) {
+    console.error('Error en follow_user:', error);
+    res.status(500).json({ error: 'Error al seguir usuario' });
+  }
+});
 
 
 /* Neo4j functions end here*/
