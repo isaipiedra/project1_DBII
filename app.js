@@ -6,6 +6,7 @@ import path from 'path';
 import fs from 'fs';
 import userService from './src/userService.js';
 import redisClient from './src/redisClient.js';
+import archiver from 'archiver';
 
 dotenv.config();
 
@@ -53,6 +54,19 @@ app.use(express.json({ limit: '1gb' }));
 app.use(express.urlencoded({ extended: true, limit: '1gb' }));
 
 // Multer configuration for large files
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'temp_uploads/')
+  },
+  filename: function (req, file, cb) {
+    // Preserve original filename with timestamp to avoid conflicts
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const originalName = path.parse(file.originalname).name; // filename without extension
+    const extension = path.extname(file.originalname); // .pdf, .docx, etc.
+    cb(null, originalName + '-' + uniqueSuffix + extension);
+  }
+});
+
 const upload = multer({
   dest: 'temp_uploads/',
   limits: {
@@ -73,21 +87,10 @@ app.post('/api/add_dataset', upload.fields([
   { name: 'videos', maxCount: 10 }
 ]), async (req, res) => {
   try {
-    // Get text fields from form data
-    const { 
-      name, 
-      description, 
-      author, 
-      status, 
-      size
-    } = req.body;
-
-    // Get uploaded files
+    const { name, description, author, status, size } = req.body;
     const files = req.files;
 
-    // Validate required fields
     if (!name || !description || !author) {
-      // Clean up uploaded files if validation fails
       if (files) {
         Object.values(files).flat().forEach(file => {
           fs.unlinkSync(file.path);
@@ -96,13 +99,7 @@ app.post('/api/add_dataset', upload.fields([
       return res.status(400).json({ error: "Faltan campos requeridos: 'name', 'description' o 'author'." });
     }
 
-    // Process file paths for your existing function
-    const avatarPath = files.avatar ? files.avatar[0].path : null;
-    const descripcionPath = files.descripcion ? files.descripcion[0].path : null;
-    const archivosPaths = files.archivos ? files.archivos.map(f => f.path) : [];
-    const videosPaths = files.videos ? files.videos.map(f => f.path) : [];
-
-    // Use your existing insert function with temporary file paths
+    // Pass files as a parameter
     const saved = await insertDataSetGridFS({
       name,
       description,
@@ -110,13 +107,18 @@ app.post('/api/add_dataset', upload.fields([
       author,
       status,
       size,
-      avatarPath,
-      descripcionPath,
-      archivosPaths,
-      videosPaths
+      avatarPath: files.avatar ? files.avatar[0].path : null,
+      descripcionPath: files.descripcion ? files.descripcion[0].path : null,
+      archivosPaths: files.archivos ? files.archivos.map(f => f.path) : [],
+      videosPaths: files.videos ? files.videos.map(f => f.path) : []
+    }, { // Pass file metadata
+      avatar: files.avatar,
+      descripcion: files.descripcion,
+      archivos: files.archivos,
+      videos: files.videos
     });
 
-    // Clean up temporary files after successful insertion
+    // Clean up temporary files
     if (files) {
       Object.values(files).flat().forEach(file => {
         try {
@@ -130,7 +132,6 @@ app.post('/api/add_dataset', upload.fields([
     res.json(saved);
 
   } catch (err) {
-    // Clean up temporary files on error
     if (req.files) {
       Object.values(req.files).flat().forEach(file => {
         try {
@@ -140,7 +141,6 @@ app.post('/api/add_dataset', upload.fields([
         }
       });
     }
-
     console.error("add_dataset error:", err);
     res.status(500).json({ error: "Error insertando dataset" });
   }
@@ -238,6 +238,61 @@ app.get('/api/files/:fileId', (req, res) => {
   }
 });
 
+app.get('/api/datasets/:datasetId/download', async (req, res) => {
+  try {
+    const { datasetId } = req.params;
+    
+    // Find the dataset
+    const dataset = await DataSet.findById(datasetId);
+    if (!dataset) {
+      return res.status(404).json({ error: 'Dataset no encontrado' });
+    }
+
+    // Get the bucket
+    const bucket = getBucket();
+
+    // Set headers for ZIP download
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${dataset.name}-files.zip"`);
+
+    // Create archiver
+    const archive = archiver('zip', {
+      zlib: { level: 9 }
+    });
+
+    // Handle archive errors
+    archive.on('error', (err) => {
+      console.error('Archive error:', err);
+      res.status(500).json({ error: 'Error creating ZIP file' });
+    });
+
+    // Pipe archive to response
+    archive.pipe(res);
+
+    // Add files to archive
+    for (const archivo of dataset.archivos) {
+      const downloadStream = bucket.openDownloadStream(archivo.file_id);
+      archive.append(downloadStream, { 
+        name: archivo.nombre
+      });
+    }
+
+    // Add videos to archive (optional)
+    for (const video of dataset.videos) {
+      const downloadStream = bucket.openDownloadStream(video.file_id);
+      archive.append(downloadStream, { 
+        name: `videos/${video.nombre}`
+      });
+    }
+
+    // Finalize the archive
+    await archive.finalize();
+
+  } catch (error) {
+    console.error('Download error:', error);
+    res.status(500).json({ error: 'Error downloading files' });
+  }
+});
 
 // Clonar dataset por ID 
 app.post('/api/datasets/:id/clone', async (req, res) => {

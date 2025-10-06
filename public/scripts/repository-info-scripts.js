@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const delete_btn = document.querySelector('#delete_btn');
     const play_btn = document.querySelector('#play_btn');
     const close_video_btn = document.querySelector('#close_video_btn');
+    const download_btn = document.querySelector('#download_btn');
 
     const send_message = document.querySelector('#send_message');
 
@@ -18,16 +19,58 @@ document.addEventListener('DOMContentLoaded', function() {
     const stars_count = document.querySelector('#stars_count');
     const stars = stars_count.children;
 
-    let starIsLocked = false;
+    let starLocked = null;
+    let wasVoted = false;
+    let voteId = null;
 
-    function cleanStars () {
-        for (let j = 0; j < stars.length; j++) {
-            stars[j].style = 'color: var(--white)';
+    async function getRating() {
+        let current_user = sessionStorage.currentUser;
+        try {
+           const get_votes = await fetch(`/api/return_given_vote?dataset_id=${dataset_id}&user_id=${current_user}`, {method: 'GET'}); 
+            
+           if(get_votes.ok) {
+                const votes = await get_votes.json();
+                if (votes.length != 0) {
+                    wasVoted = true;
+                    voteId = votes[0].id_vote;
+                    let rating = votes[0].calification;
+                    starLocked = rating;
+                    
+                    for(let i = 0; i < stars.length; i++) {
+                        for (let j = 0; j < rating; j++) {            
+                            stars[j].style = 'color: var(--yellow)';
+                        }
+                        for (let k = stars.length-1; k > rating; k--) {
+                            stars[k].style = 'color: var(--white)';
+                        }
+                    }
+                }
+           }
+        } catch (err) {
+            console.error(err);
         }
     }
 
+    getRating();
+
+    function cleanStars () {
+        if (starLocked === null) {
+            for (let j = 0; j < stars.length; j++) {
+                stars[j].style = 'color: var(--white)';
+            }
+        } else {
+            for(let i = 0; i < stars.length; i++) {
+                for (let j = 0; j < starLocked; j++) {            
+                    stars[j].style = 'color: var(--yellow)';
+                }
+                for (let k = starLocked; k < stars.length; k++) {
+                    stars[k].style = 'color: var(--white)';
+                }
+            }
+        }        
+    }
+
     function starsHover (i) {
-        if (starIsLocked) return;
         for (let j = 0; j < i+1; j++) {
             stars[j].style = 'color: var(--yellow)';
         }
@@ -37,18 +80,65 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     stars_count.addEventListener('mouseleave', cleanStars);
-        for (let i = 0; i < stars.length; i++) {
-            stars[i].addEventListener('mouseover', () => starsHover(i) );
+    
+    for (let i = 0; i < stars.length; i++) {
+        stars[i].addEventListener('mouseover', () => starsHover(i) );
 
-            stars[i].addEventListener('click', () => {
-                stars_count.removeEventListener('mouseleave', cleanStars);
-                starIsLocked = true;
-                for (let j = 0; j < i+1; j++) {            
-                    stars[j].style = 'color: var(--yellow)';
+        stars[i].addEventListener('click', async () => {
+            let rating = i + 1;
+            let current_user = sessionStorage.currentUser;
+
+            if(!wasVoted) {
+                try {
+                    const get_dataset = await fetch(`http://localhost:3000/api/datasets/${dataset_id}`, {method:'GET'});
+                    const dataset = await get_dataset.json();
+
+                    let dataset_name = dataset.name;
+                    let dataset_description = dataset.description;
+                    let user_name = dataset.author;
+
+                    const response = await fetch('/api/add_dataset_vote', {
+                        method: 'POST',
+                        headers: {
+                        'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            dataset_id: dataset_id, 
+                            user_id: current_user, 
+                            dataset_name: dataset_name, 
+                            dataset_description: dataset_description, 
+                            user_name: user_name, 
+                            calification: rating
+                        })
+                    });
+
+                    if(response.ok) {
+                        window.location.reload();
+                    }
+                } catch (err) {
+                    console.error(err);
+                }               
+            } else {
+                try {
+                    const response = await fetch('/api/update_given_vote', {
+                        method: 'PUT',
+                        headers: {
+                        'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            dataset_id: dataset_id,
+                            user_id: current_user,
+                            new_calification: rating
+                        })
+                    });
+                    
+                    if(response.ok) {
+                        window.location.reload();
+                    }
+                } catch (err) {
+                    console.error(err);
                 }
-                for (let k = stars.length-1; k > i; k--) {
-                    stars[k].style = 'color: var(--white)';
-                }
+            }
         });
     }
 
@@ -114,6 +204,53 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         btns_message_box.appendChild(new_delete_btn);
+    });
+
+    download_btn.addEventListener('click', async ()=>{
+        try {
+            const response = await fetch(`/api/datasets/${dataset_id}/download`);
+            if (response.ok) {
+                const get_dataset = await fetch(`http://localhost:3000/api/datasets/${dataset_id}`, {method:'GET'});
+                const dataset = await get_dataset.json();
+
+                let dataset_name = dataset.name;
+                let dataset_description = dataset.description;
+                let user_name = dataset.author;
+                let current_user = sessionStorage.currentUser;
+
+                try {
+                    const save_download = await fetch('/api/record_new_download', {
+                        method: 'POST',
+                        headers: {
+                        'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            dataset_id: dataset_id, 
+                            user_id: current_user, 
+                            dataset_name: dataset_name, 
+                            dataset_description: dataset_description, 
+                            user_name: user_name
+                        })
+                    });
+
+                    if(save_download.ok) {
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `${dataset_id}-files.zip`;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+        } catch (error) {
+            console.error('Error downloading ZIP:', error);
+        }
     });
 
     change_reply_main.addEventListener('click', () => {
@@ -204,7 +341,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 repository_name.innerHTML = result.name;
                 repository_owner.innerHTML = `Owner: ${result.author}`;
-                repository_file_amount.innerHTML = `Files: ${result.archivos.length}`;
+                repository_files = result.archivos;
+                repository_file_amount.innerHTML = `Files: ${repository_files.length}`;
                 repository_creation_date.innerHTML = formatDate(result.date);
 
                 repository_description.innerHTML = result.description;
@@ -214,6 +352,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 new_source.type = 'video/mp4';
 
                 video_guide.appendChild(new_source);   
+
+                const repository_file_list = document.querySelector('#repository_file_list');
+                let tagSequence = '';
+                for(let i = 0; i < repository_files.length; i++) {
+                    let file_name = repository_files[i].nombre;
+                    let file_size = formatFileSize(repository_files[i].tamano);
+
+                    tagSequence += `
+                        <li class="repository_file_item">
+                            <p>${file_name}</p>
+                            <div class="file_item_details">
+                                <p>${file_size}</p>
+                            </div>
+                        </li>`;
+                }
+                repository_file_list.innerHTML = tagSequence;
 
                 try {
                     const get_comments = await fetch(`/api/get_all_comments_by_dataset?id_dataset=${dataset_id}`, {method: 'GET'});
@@ -358,6 +512,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const year = date.getFullYear();
         
         return `${day}/${month}/${year}`;
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
     function asUrl(fileId){
