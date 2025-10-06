@@ -16,7 +16,7 @@ import { init_cassandra,
   get_all_comments_by_dataset,
   update_comment_visibility, reply_comment,
   get_comment_replies, update_reply_visibility,
-  add_dataset_vote, get_votes_by_dataset, get_votes_by_user,
+  add_dataset_vote, get_votes_by_dataset, get_votes_by_user, return_given_vote, update_given_vote,
   record_new_download, get_downloads_by_dataset, start_conversation,
   get_user_conversations, conversation_exists,send_message, get_conversation_messages, get_latest_message} 
   from './Databases/Cassandra/cassandra_methods.js';
@@ -933,6 +933,42 @@ app.get('/api/get_votes_by_dataset', async (req, res) => {
   }
 });
 
+
+
+app.get('/api/return_given_vote', async(req, res)=>{
+  try{
+    const {dataset_id, user_id} = req.query;
+    if(!dataset_id || !user_id)
+    {
+      return res.status(400).json({error: "Falta 'dataset_id' y/o 'user_id'"});
+    }
+    const rows = await return_given_vote(dataset_id, user_id);
+    res.json(rows);
+
+  }catch(error){
+    console.error('return_given_vote error: ', error);
+    res.status(500).json({error: "Error"});
+  }
+});
+
+app.put('/api/update_given_vote', async (req, res)=>{
+  try{
+    const {dataset_id, user_id, new_calification} = req.body;
+    if(!dataset_id || !user_id || !new_calification)
+    {
+      return res.status(400).json({error: "Falta 'dataset_id' o 'user_id' o 'new_calification'"});
+    }
+
+    const new_calification_num = parseInt(new_calification);
+    
+    const rows = await update_given_vote({dataset_id, user_id, new_calification : new_calification_num});
+      res.json(rows);
+  }catch(error)
+  {
+    console.error('update_given_vote error: ', error);
+    res.status(500).json({error: "Error"});
+  }
+});
 /**
  * Function which retrieves all databases voted by a specific user using the user's id as parameter
  */
