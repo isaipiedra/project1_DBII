@@ -9,34 +9,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Redirect back to desktop if no username provided
         window.location.href = 'desktop.html';
     }
-
-    // Navigation handlers
-    document.getElementById('menu_opener').addEventListener('click', function() {
-        const userInfo = document.getElementById('user_info');
-        userInfo.style.display = userInfo.style.display === 'flex' ? 'none' : 'flex';
-    });
-
-    document.getElementById('tooltip_right').addEventListener('click', function() {
-        document.getElementById('user_info').style.display = 'none';
-    });
-
-    document.getElementById('user_inbox_menu').addEventListener('click', function() {
-        const sideInbox = document.getElementById('side_inbox');
-        sideInbox.style.display = sideInbox.style.display === 'flex' ? 'none' : 'flex';
-    });
-
-    document.getElementById('tooltip_left').addEventListener('click', function() {
-        document.getElementById('side_inbox').style.display = 'none';
-    });
-
     // Search functionality
     setupSearch();
 });
 
 async function loadUserProfile(username) {
     try {
-        console.log('Loading profile for:', username);
-        
         const response = await fetch(`/users/${encodeURIComponent(username)}`);
         
         if (!response.ok) {
@@ -44,7 +22,7 @@ async function loadUserProfile(username) {
         }
         
         const userData = await response.json();
-        console.log('User data loaded:', userData);
+        
         displayUserProfile(userData);
         
     } catch (error) {
@@ -75,8 +53,8 @@ function displayUserProfile(userData) {
         const profileImg = document.createElement('img');
         profileImg.src = `/users/${encodeURIComponent(userData.username)}/profile-picture`;
         profileImg.alt = userData.username;
-        profileImg.style.width = '80px';
-        profileImg.style.height = '80px';
+        profileImg.style.width = '150px';
+        profileImg.style.height = '150px';
         profileImg.style.borderRadius = '50%';
         userIcon.parentNode.insertBefore(profileImg, userIcon);
     }
@@ -85,6 +63,10 @@ function displayUserProfile(userData) {
     if (followBtn) {
         followBtn.style.display = 'none';
     }
+
+    followBtn.addEventListener(, ()=> {
+        
+    });
 
     // Update user summary
     updateUserSummary(userData);
@@ -110,10 +92,6 @@ function updateUserSummary(userData) {
             <li>
                 <h1>Birth Date: </h1>
                 <p>${escapeHtml(userData.birthDate || 'Not specified')}</p>
-            </li>
-            <li>
-                <h1>Email: </h1>
-                <p>${escapeHtml(userData.email || 'Not specified')}</p>
             </li>
             <li>
                 <h1>Joined: </h1>
@@ -147,7 +125,7 @@ function displayUserRepositories(repositories) {
         displayNoRepositories();
         return;
     }
-    
+
     repoList.innerHTML = repositories.map(repo => `
         <li>
             <a href="repository_info.html?id=${repo.id}" style="text-decoration: none; color: inherit;">

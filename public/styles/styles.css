@@ -774,6 +774,10 @@ html {
     justify-content: space-between;
 }
 
+#delete_btn {
+    display: none;
+}
+
 .delete_btn {
     font-weight: bold;
     padding: 0.5em 1.5em;
@@ -1737,6 +1741,13 @@ html {
   display: none;
 }
 
+.video_container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: none;
+}
+
 .overlay {
   position: absolute;
   top: 0;
@@ -1761,7 +1772,27 @@ html {
   flex-direction: column;
 }
 
+.video_box {
+    position: absolute; /* Ensures message content is above the overlay if z-index is higher */
+    z-index: 2; /* Adjust as needed, ensure it's higher than the overlay if content needs to be clickable */
+    left: 30%;
+    top: 20%;
+    background-color: var(--primary-background);
+    padding: 2em 3em;
+    width: 40%;
+    height: 50%;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
 .close_message_box {
+    display: flex;
+    justify-content: end;
+    height: 5%;
+}
+
+.close_video_box{
     display: flex;
     justify-content: end;
     height: 5%;
@@ -1777,6 +1808,20 @@ html {
 }
 
 #close_message_btn:hover {
+    background-color: var(--hover-dark-button);
+    transition: 0.2s ease;
+}
+
+#close_video_btn {
+    border-radius: 100%;
+    width: 35px;
+    height: 35px;
+    border: none;
+    background-color: var(--dark-button);
+    cursor: pointer;
+}
+
+#close_video_btn:hover {
     background-color: var(--hover-dark-button);
     transition: 0.2s ease;
 }

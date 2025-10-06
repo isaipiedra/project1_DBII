@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     //Create a new post 
-    function createPost(creator_pfp, data_username, data_fileCount, data_date, data_title, data_description) {
+    function createPost(creator_pfp, dataset_id, data_username, data_fileCount, data_date, data_title, data_description) {
         // Create main post container
         const postElement = document.createElement('div');
         postElement.className = 'post';
@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', function() {
         postSeeMore.className = 'post_seemore';
         
         const link = document.createElement('a');
-        link.href = 'repository_info.html';
+        link.href = `repository_info.html?id=${dataset_id}`;
         
         const button = document.createElement('button');
         button.className = 'seemore_btn';
@@ -217,12 +217,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.error(err);
                 }
 
+                let dataset_id = dataset._id;
                 let data_fileCount = dataset.archivos.length;
                 let data_date = formatDate(dataset.date);
                 let data_title = dataset.name;
                 let data_description = dataset.description;
-
-                new_post = createPost(creator_pfp, data_username, data_fileCount, data_date, data_title, data_description);
+                
+                new_post = createPost(creator_pfp, dataset_id, data_username, data_fileCount, data_date, data_title, data_description);
                 main_post_feed.appendChild(new_post);
             }
         } catch (err) {

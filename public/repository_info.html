@@ -57,13 +57,13 @@
             <div>
                 <a href="desktop.html"><i class='bx bx-chevron-left' id="back_arrow"></i></a>              
             </div>        
-            <h1>Repository name</h1>
+            <h1 id="repository_name">Repository name</h1>
         </section>
 
         <div id="repository_details">
-            <p>Owner: My username</p>
-            <p>Archivos: 3</p>
-            <p>20/11/2025</p>
+            <p id="repository_owner">Owner: My username</p>
+            <p id="repository_file_amount">Archivos: 3</p>
+            <p id="repository_creation_date">20/11/2025</p>
             <p><a href="">Downloads</a></p>
             <div class="stars_count" id="stars_count">
                 <i class='bx bxs-star'></i>
@@ -77,17 +77,17 @@
         <div id="main_info">
             <article id="repository_info_left">
                 <section id="repository_info_description">
-                    <p>
+                    <p id="repository_description">
                         Lorem ipsum dolor sit amet consectetur, adipisicing elit. A nostrum consequuntur optio tempora totam sit iure at commodi. Illum error, alias esse provident quia, recusandae autem, accusamus nisi ab fugit quasi quo voluptas! Adipisci quam molestiae voluptates animi, eum iste praesentium debitis consequuntur voluptatum laboriosam ab impedit ipsam corporis quisquam.
                     </p>                
                 </section>
                 <section id="repository_action_btns">
                     <div class="right_btns">
-                        <button class="delete_btn">Delete</button>
+                        <button class="delete_btn" id="delete_btn">Delete</button>
                     </div>
                     <div class="left_btns">
-                        <button class="play_btn">Play guide  <i class='bx bx-play' ></i></button>
-                        <button class="download_btn">Download</button>
+                        <button class="play_btn" id="play_btn">Play guide  <i class='bx bx-play'></i></button>
+                        <button class="download_btn" id="download_btn">Download</button>
                     </div>
                 </section>
                 <section id="repository_files">
@@ -248,6 +248,18 @@
             <div class="btns_message_box">
                 <button id="btn_message_primary">Click me</button>
             </div>               
+        </div>
+        <div class="overlay"></div>
+    </div>
+
+    <div class="video_container">
+        <div class="video_box">
+            <div class="close_video_box">
+                <button id="close_video_btn"><i class="bx bx-x"></i></button>
+            </div>
+            <video width="100%" height="100%" id="video_guide" controls>
+
+            </video>
         </div>
         <div class="overlay"></div>
     </div>
