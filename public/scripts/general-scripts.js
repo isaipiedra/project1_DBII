@@ -35,8 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
             displayNoRepositories();
             return;
         }
-        console.log(repositories);
-
+        
         repoList.innerHTML = repositories.map(repo => `
             <li class="repository_item">
                 <a href="repository_info.html?id=${repo.id}" style="text-decoration: none; color: inherit;">

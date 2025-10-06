@@ -31,7 +31,7 @@ async function loadUserProfile(username) {
     }
 }
 
-function displayUserProfile(userData) {
+async function displayUserProfile(userData) {
     // Update page title
     document.title = `${userData.username} - Profile`;
     
@@ -41,6 +41,30 @@ function displayUserProfile(userData) {
     const userIcon = userBackground.querySelector('.bx.bxs-user-circle');
     const userName = userBackground.querySelector('h1');
     const followBtn = userBackground.querySelector('#follow_user_btn');
+
+    followBtn.addEventListener('click', async () => {
+        try {
+            let current_user = sessionStorage.currentUser;
+            const response = await fetch(`/api/follow_user`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id_user: current_user, 
+                    id_user_to_follow: userData.username
+                })
+            });
+
+            const result = await response.json();
+
+            if(response.ok) {
+                window.location.reload();
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    });
     
     // Update user name
     if (userName) {
@@ -58,15 +82,20 @@ function displayUserProfile(userData) {
         profileImg.style.borderRadius = '50%';
         userIcon.parentNode.insertBefore(profileImg, userIcon);
     }
+
+    let followers_response, followers_result;
+
+    try {
+        followers_response = await fetch(`/api/get_who_I_follow/?id_user=${sessionStorage.currentUser}`, {method: 'GET',});
+        followers_result = await followers_response.json();
+    } catch (err) {
+        console.errro(err)
+    }
     
     // Hide follow button for now (will be implemented later)
-    if (followBtn) {
+    if (sessionStorage.currentUser === userData.username || followers_result.followed.includes(userData.username)) {
         followBtn.style.display = 'none';
     }
-
-    followBtn.addEventListener(, ()=> {
-        
-    });
 
     // Update user summary
     updateUserSummary(userData);
@@ -125,7 +154,7 @@ function displayUserRepositories(repositories) {
         displayNoRepositories();
         return;
     }
-
+    
     repoList.innerHTML = repositories.map(repo => `
         <li>
             <a href="repository_info.html?id=${repo.id}" style="text-decoration: none; color: inherit;">

@@ -1,6 +1,5 @@
 const API_BASE_URL = 'http://localhost:3000';
 
-const edit_user_name = document.querySelector('#edit_user_name');
 const user_name = document.querySelector('#user_name');
 const user_pfp = document.querySelector('#user_pfp');
 
@@ -11,9 +10,6 @@ const user_birthdate = document.querySelector('#user_birthdate');
 const save_changes_btn = document.querySelector('#save_changes_btn');
 const change_password_btn = document.querySelector('#change_password_btn');
 
-edit_user_name.addEventListener('click', () => {
-    user_name.disabled = false;
-});
 
 document.addEventListener('DOMContentLoaded', function() {
     user_name.value = sessionStorage.currentUser;
@@ -24,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     user_birthdate.value = JSON.parse(sessionStorage.userData).birthDate;
 
     loadUserRepositories(sessionStorage.currentUser);
+    loadUserFollowers(sessionStorage.currentUser);
 
     async function loadUserRepositories(username) {
         try {
@@ -63,6 +60,61 @@ document.addEventListener('DOMContentLoaded', function() {
         const repoList = document.querySelector('#user_repository_list ul');
         if (repoList) {
             repoList.innerHTML = '<li>No repositories found</li>';
+        }
+    }
+
+    async function loadUserFollowers(username) {
+        try {
+            const response = await fetch(`/api/get_followers_by_id/?id_user=${username}`);
+            
+            if (response.ok) {
+                const followers = await response.json();
+                displayUserFollowers(followers.followers);
+            } else {
+                displayNoFollowers();
+            }
+        } catch (error) {
+            console.error('Error loading followers:', error);
+            displayNoFollowers();
+        }
+    }
+    
+    async function displayUserFollowers(followers) {
+        const followersList = document.querySelector('#user_followers_list ul');
+        if (!followersList) return;
+        
+        if (!followers || followers.length === 0) {
+            displayNoFollowers();
+            return;
+        }
+
+        for (const follower of followers) {
+            let follower_pfp;
+
+            try {
+                const user_follower = await fetch(`http://localhost:3000/users/${follower}`, {method:'GET'}); 
+                const follow = await user_follower.json();
+
+                follower_pfp = follow.profilePicture;
+            } catch (err) {
+                console.error(err);
+            }
+
+            followersList.innerHTML = `
+                <li>
+                    <img src="${follower_pfp}" width="30" style="border-radius:50%"></img>
+                    <a href="user_profile.html?username=${follower}" style="text-decoration: none; color: inherit;">
+                        ${follower}
+                    </a>
+                </li>
+            `;
+        }
+    }
+    
+    function displayNoFollowers() {
+        const followersList = document.querySelector('#user_followers_list ul');
+        if (followersList) {
+            followersList.innerHTML = '<li>No followers found</li>';
         }
     }
 
