@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const play_btn = document.querySelector('#play_btn');
     const close_video_btn = document.querySelector('#close_video_btn');
     const download_btn = document.querySelector('#download_btn');
+    const see_downloads = document.querySelector('#see_downloads');
 
     const send_message = document.querySelector('#send_message');
 
@@ -206,6 +207,68 @@ document.addEventListener('DOMContentLoaded', function() {
         btns_message_box.appendChild(new_delete_btn);
     });
 
+    see_downloads.addEventListener('click', async () => {
+        const message_container = document.querySelector('.message_container');
+        const title_message_box = document.querySelector('.title_message_box');
+        const content_message_box = document.querySelector('.content_message_box');
+        const btns_message_box = document.querySelector('.btns_message_box');
+
+        content_message_box.innerHTML = '';
+        btns_message_box.innerHTML = '';
+
+        title_message_box.children[0].innerHTML = 'Downloads'; 
+
+        try {
+            const get_dowloads = await fetch(`/api/get_downloads_by_dataset?dataset_id=${dataset_id}`, {method:'GET'});
+            const dowloads = await get_dowloads.json();
+
+            if(get_dowloads.ok) {
+                let new_ul = document.createElement('ul');   
+                for(const download of dowloads) {
+                    let user_pfp;
+
+                    try {
+                        const user_response = await fetch(`http://localhost:3000/users/${download.user_id}`, {method: 'GET'}); 
+                        const user_data = await user_response.json();
+                        user_pfp = user_data.profilePicture;
+                    } catch (err) {
+                        console.error('Error fetching user profile:', err);
+                        user_pfp = null;
+                    }
+
+                    let new_a = document.createElement('a');
+                    let new_li = document.createElement('li');
+
+                    let div_left = document.createElement('div');
+                    let user_img = document.createElement('img');
+                    let username = document.createElement('p');
+
+                    let div_right = document.createElement('div');
+
+                    new_a.href = `../user_profile.html?username=${encodeURIComponent(download.user_id)}`;
+
+                    user_img.src = user_pfp;
+                    user_img.style = 'width:40px; height:40px; border-radius: 50%; margin-right: 1em;';
+                    username.innerHTML = download.user_id;
+                    div_left.appendChild(user_img);
+                    div_left.appendChild(username);
+
+                    div_right.innerHTML = formatTime(download.download_date);
+
+                    new_a.appendChild(div_left);
+                    new_a.appendChild(div_right);
+                    new_li.appendChild(new_a);
+
+                    new_ul.appendChild(new_li);
+                }   
+                content_message_box.appendChild(new_ul);
+                message_container.style = 'display:flex;';
+            }            
+        } catch (err) {
+            console.error(err);
+        }
+    });
+
     download_btn.addEventListener('click', async ()=>{
         try {
             const response = await fetch(`/api/datasets/${dataset_id}/download`);
@@ -243,6 +306,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         a.click();
                         window.URL.revokeObjectURL(url);
                         document.body.removeChild(a);
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
                     }
                 } catch (err) {
                     console.error(err);
@@ -512,6 +578,27 @@ document.addEventListener('DOMContentLoaded', function() {
         const year = date.getFullYear();
         
         return `${day}/${month}/${year}`;
+    }
+
+    function formatTime(dateString) {
+        const date = new Date(dateString);
+        
+        // Format time in 12-hour format with AM/PM
+        let hours = date.getHours();
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        
+        // Convert to 12-hour format
+        hours = hours % 12;
+        hours = hours ? hours : 12; // the hour '0' should be '12'
+        hours = String(hours).padStart(2, '0');
+        
+        // Format date
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = String(date.getFullYear()).slice(-2); // Get last 2 digits of year
+        
+        return `${hours}:${minutes} ${ampm} ${day}/${month}/${year}`;
     }
 
     function formatFileSize(bytes) {

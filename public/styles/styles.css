@@ -718,6 +718,11 @@ html {
     padding: 0.5em 2em;
 }
 
+#see_downloads {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
 .stars_count {
     display: flex;
     flex-direction: row;
@@ -1883,6 +1888,15 @@ html {
     justify-content: space-between;
     cursor: pointer;
     width: 100%;
+}
+
+.content_message_box ul li a{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    text-decoration: none;
 }
 
 .content_message_box ul li div{

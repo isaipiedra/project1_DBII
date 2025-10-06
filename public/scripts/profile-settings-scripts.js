@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (err) {
                 console.error(err);
             }
-            tagContent.join(`
+            tagContent += `
                 
                 <li>
                     <img src="${follower_pfp}" width="30" style="border-radius:50%"></img>
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         ${follower}
                     </a>
                 </li>
-            `);
+            `;
         }
         followersList.innerHTML = tagContent;
     }
