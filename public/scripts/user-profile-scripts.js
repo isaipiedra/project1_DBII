@@ -9,34 +9,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Redirect back to desktop if no username provided
         window.location.href = 'desktop.html';
     }
-
-    // Navigation handlers
-    document.getElementById('menu_opener').addEventListener('click', function() {
-        const userInfo = document.getElementById('user_info');
-        userInfo.style.display = userInfo.style.display === 'flex' ? 'none' : 'flex';
-    });
-
-    document.getElementById('tooltip_right').addEventListener('click', function() {
-        document.getElementById('user_info').style.display = 'none';
-    });
-
-    document.getElementById('user_inbox_menu').addEventListener('click', function() {
-        const sideInbox = document.getElementById('side_inbox');
-        sideInbox.style.display = sideInbox.style.display === 'flex' ? 'none' : 'flex';
-    });
-
-    document.getElementById('tooltip_left').addEventListener('click', function() {
-        document.getElementById('side_inbox').style.display = 'none';
-    });
-
     // Search functionality
     setupSearch();
 });
 
 async function loadUserProfile(username) {
     try {
-        console.log('Loading profile for:', username);
-        
         const response = await fetch(`/users/${encodeURIComponent(username)}`);
         
         if (!response.ok) {
@@ -44,7 +22,7 @@ async function loadUserProfile(username) {
         }
         
         const userData = await response.json();
-        console.log('User data loaded:', userData);
+        
         displayUserProfile(userData);
         
     } catch (error) {
@@ -53,7 +31,7 @@ async function loadUserProfile(username) {
     }
 }
 
-function displayUserProfile(userData) {
+async function displayUserProfile(userData) {
     // Update page title
     document.title = `${userData.username} - Profile`;
     
@@ -63,6 +41,30 @@ function displayUserProfile(userData) {
     const userIcon = userBackground.querySelector('.bx.bxs-user-circle');
     const userName = userBackground.querySelector('h1');
     const followBtn = userBackground.querySelector('#follow_user_btn');
+
+    followBtn.addEventListener('click', async () => {
+        try {
+            let current_user = sessionStorage.currentUser;
+            const response = await fetch(`/api/follow_user`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id_user: current_user, 
+                    id_user_to_follow: userData.username
+                })
+            });
+
+            const result = await response.json();
+
+            if(response.ok) {
+                window.location.reload();
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    });
     
     // Update user name
     if (userName) {
@@ -75,14 +77,23 @@ function displayUserProfile(userData) {
         const profileImg = document.createElement('img');
         profileImg.src = `/users/${encodeURIComponent(userData.username)}/profile-picture`;
         profileImg.alt = userData.username;
-        profileImg.style.width = '80px';
-        profileImg.style.height = '80px';
+        profileImg.style.width = '150px';
+        profileImg.style.height = '150px';
         profileImg.style.borderRadius = '50%';
         userIcon.parentNode.insertBefore(profileImg, userIcon);
     }
+
+    let followers_response, followers_result;
+
+    try {
+        followers_response = await fetch(`/api/get_who_I_follow/?id_user=${sessionStorage.currentUser}`, {method: 'GET',});
+        followers_result = await followers_response.json();
+    } catch (err) {
+        console.errro(err)
+    }
     
     // Hide follow button for now (will be implemented later)
-    if (followBtn) {
+    if (sessionStorage.currentUser === userData.username || followers_result.followed.includes(userData.username)) {
         followBtn.style.display = 'none';
     }
 
@@ -110,10 +121,6 @@ function updateUserSummary(userData) {
             <li>
                 <h1>Birth Date: </h1>
                 <p>${escapeHtml(userData.birthDate || 'Not specified')}</p>
-            </li>
-            <li>
-                <h1>Email: </h1>
-                <p>${escapeHtml(userData.email || 'Not specified')}</p>
             </li>
             <li>
                 <h1>Joined: </h1>

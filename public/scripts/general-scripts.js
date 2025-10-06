@@ -8,6 +8,55 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!isLoggedIn) {
         window.location.href = 'login.html';
     }
+
+    loadUserRepositories(sessionStorage.currentUser);
+    
+    async function loadUserRepositories(username) {
+        try {
+            const response = await fetch(`/users/${username}/repositories`);
+            
+            if (response.ok) {
+                const repositories = await response.json();
+                displayUserRepositories(repositories);
+            } else {
+                displayNoRepositories();
+            }
+        } catch (error) {
+            console.error('Error loading repositories:', error);
+            displayNoRepositories();
+        }
+    }
+
+    function displayUserRepositories(repositories) {
+        const repoList = document.querySelector('#repository_list ul');
+        if (!repoList) return;
+        
+        if (!repositories || repositories.length === 0) {
+            displayNoRepositories();
+            return;
+        }
+        
+        repoList.innerHTML = repositories.map(repo => `
+            <li class="repository_item">
+                <a href="repository_info.html?id=${repo.id}" style="text-decoration: none; color: inherit;">
+                    ${escapeHtml(repo.name)}
+                </a>
+            </li>
+        `).join('');
+    }
+
+    function displayNoRepositories() {
+        const repoList = document.querySelector('#repository_list ul');
+        if (repoList) {
+            repoList.innerHTML = '<li>No repositories found</li>';
+        }
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
 });
 
 /* ---------- MESSAGE BEHAVIORS ---------- */
