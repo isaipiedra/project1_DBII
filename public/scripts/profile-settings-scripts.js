@@ -88,6 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        let tagContent = '';
         for (const follower of followers) {
             let follower_pfp;
 
@@ -99,16 +100,17 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (err) {
                 console.error(err);
             }
-
-            followersList.innerHTML = `
+            tagContent.join(`
+                
                 <li>
                     <img src="${follower_pfp}" width="30" style="border-radius:50%"></img>
                     <a href="user_profile.html?username=${follower}" style="text-decoration: none; color: inherit;">
                         ${follower}
                     </a>
                 </li>
-            `;
+            `);
         }
+        followersList.innerHTML = tagContent;
     }
     
     function displayNoFollowers() {

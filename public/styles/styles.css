@@ -886,8 +886,7 @@ html {
 }
 
 #discussion_item {
-    margin-top: 1em;
-    padding-bottom: 1em;
+    margin: 0.5em 0;
 }
 
 .level_one_discussion {
@@ -935,6 +934,10 @@ html {
     text-align: justify;
 }
 
+#discussion_item_content p {
+    margin-top: 0;
+}
+
 #discussion_item_reply_count {
     padding: 0 3em;
     text-decoration: underline;
@@ -946,31 +949,44 @@ html {
 }
 
 #message_space {
-    display: flex;
-    align-items: center;
-    justify-content: space-evenly;
-    height: 10%;
+    flex-direction: column;
+    height: 50%;
 }
 
-#message_space input {
-    width: 20em;
+#message_space div {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    height: 10%;
+    margin-bottom: 0.25em;
+}
+
+#message_space div input {
+    width: 19em;
     background-color: var(--light-gray);
     border: none;
     border-radius: 4px;
     font-size: 20px;
     color: var(--input-text);
     padding: 0.25em 0.5em;
+    margin-right: 1em;
 }
 
-#message_space i {
+#message_space div i {
     font-size: 30px;
     color: var(--light-gray);
     cursor: pointer;
 } 
 
-#message_space i:hover {
+#message_space div i:hover {
     color: var(--icons-purple);
     transition: ease 0.2s;
+}
+
+#change_reply_main {
+    cursor: pointer;
+    text-decoration: underline;
 }
 
 /* ---- SPECIFIC CHANGES FOR REPOSITORY CREATION ---- */

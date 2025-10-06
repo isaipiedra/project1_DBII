@@ -44,6 +44,7 @@ repo_files_input.addEventListener('change', (event) => {
             if (!allSelectedFiles.some(f => f.name === file.name && f.size === file.size)) {
                 allSelectedFiles.push(file);
             }
+            details_file_amount.innerHTML = `Files: ${newFiles.length}`;
         });
         
         // Update the visual list

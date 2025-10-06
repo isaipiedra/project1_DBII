@@ -6,7 +6,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const play_btn = document.querySelector('#play_btn');
     const close_video_btn = document.querySelector('#close_video_btn');
 
+    const send_message = document.querySelector('#send_message');
+
+    const change_reply_main = document.querySelector('#change_reply_main');
+
     let show_video = false;
+    let replying_to = null;
+    let id_replying_comment = null;
 
     /* --------- RATING STARS BEHAVIORS --------- */
     const stars_count = document.querySelector('#stars_count');
@@ -110,6 +116,69 @@ document.addEventListener('DOMContentLoaded', function() {
         btns_message_box.appendChild(new_delete_btn);
     });
 
+    change_reply_main.addEventListener('click', () => {
+        replying_to = null;
+        id_replying_comment = null;
+        const replying_message = document.querySelector('#replying_message');
+        replying_message.innerHTML = `Comment in main thread`;
+    });
+
+    send_message.addEventListener('click', async () => {
+        const message_input = document.querySelector('#message_input');
+
+        if(message_input.value === '') {
+            console.log('vacio');
+        } else if (id_replying_comment === null) {
+            let comment_content = message_input.value;
+            let user_name = sessionStorage.currentUser;
+            try {
+                const response = await fetch('/api/add_comment', {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id_dataset: dataset_id,
+                        user_name: user_name,
+                        comment: comment_content,
+                        visible: 'true'
+                    })
+                });
+
+                if(response.ok) {
+                    const result = await response.json();
+                    window.location.reload();
+                }                
+            } catch (err) {
+                console.error(err);
+            }
+        } else {
+            let comment_content = message_input.value;
+            let user_name = sessionStorage.currentUser;
+            try {
+                const response = await fetch('/api/reply_comment', {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id_comment: id_replying_comment,
+                        username: user_name,
+                        reply: comment_content,
+                        visible: 'true'
+                    })
+                });
+
+                if(response.ok) {
+                    const result = await response.json();
+                    window.location.reload();
+                }                
+            } catch (err) {
+                console.error(err);
+            }
+        }  
+    });
+
     async function loadRepoInfo() {
         const repository_image = document.querySelector('#repository_image');
 
@@ -145,6 +214,137 @@ document.addEventListener('DOMContentLoaded', function() {
                 new_source.type = 'video/mp4';
 
                 video_guide.appendChild(new_source);   
+
+                try {
+                    const get_comments = await fetch(`/api/get_all_comments_by_dataset?id_dataset=${dataset_id}`, {method: 'GET'});
+                    
+                    if(get_comments.ok) {
+                        const comments = await get_comments.json();
+                        const discussion_space = document.querySelector('#discussion_space');
+                        
+                        if(comments.length > 0) {
+                            for (const comment of comments) {
+                                if (!comment.visible) continue;
+                                
+                                let user_pfp;
+
+                                try {
+                                    const user_response = await fetch(`http://localhost:3000/users/${comment.user_name}`, {method: 'GET'}); 
+                                    const user_data = await user_response.json();
+                                    user_pfp = user_data.profilePicture;
+                                } catch (err) {
+                                    console.error('Error fetching user profile:', err);
+                                    user_pfp = null;
+                                }
+                                
+                                // Create the main comment container
+                                const commentContainer = document.createElement('div');
+                                commentContainer.className = 'discussion_thread';
+                                
+                                // Create the level one discussion (main comment)
+                                const levelOneDiscussion = document.createElement('div');
+                                levelOneDiscussion.className = 'level_one_discussion';
+                                levelOneDiscussion.id = 'discussion_item';
+                                
+                                const userIconHTML = user_pfp 
+                                    ? `<img src="${user_pfp}" alt="Profile" style="width: 30px; height: 30px; border-radius: 50%; margin-right:0.75em">`
+                                    : `<i class='bx bxs-user-circle'></i>`;
+                                
+                                levelOneDiscussion.innerHTML = `
+                                    <div id="discussion_item_header">
+                                        <div id="discussion_item_header_user">
+                                            ${userIconHTML}
+                                            <p>${comment.user_name}</p>
+                                        </div>                    
+                                        <i class='bx bx-reply' id="reply_arrow"></i>
+                                    </div>
+                                    <div id="discussion_item_content">
+                                        <p>${comment.comment}</p>
+                                    </div>
+                                    <div id="discussion_item_reply_count">
+                                        <!-- Reply count will be updated below -->
+                                    </div>
+                                `;
+
+                                // Add reply arrow event listener
+                                const replyArrow = levelOneDiscussion.querySelector('#reply_arrow');
+                                replyArrow.addEventListener('click', () => {
+                                    replying_to = comment.user_name;
+                                    id_replying_comment = comment.id_comment;
+                                    const replying_message = document.querySelector('#replying_message');
+                                    replying_message.innerHTML = `Replying to: ${replying_to}`;
+                                });
+                                
+                                commentContainer.appendChild(levelOneDiscussion);
+                                
+                                // Fetch replies for this comment
+                                let replies = [];
+                                try {
+                                    const get_replies = await fetch(`/api/get_comment_replies?id_comment=${comment.id_comment}`, {method: 'GET'});
+                                    
+                                    if (get_replies.ok) {
+                                        replies = await get_replies.json();
+                                        
+                                        // Update reply count in the main comment
+                                        const replyCountElement = levelOneDiscussion.querySelector('#discussion_item_reply_count');
+                                        if (replies.length > 0) {
+                                            replyCountElement.innerHTML = `<span style="color: var(--white); font-size: 0.9em;">${replies.length} ${replies.length === 1 ? 'reply' : 'replies'}</span>`;
+                                        }
+                                        
+                                        // Add each reply
+                                        for (const reply of replies) {
+                                            if (!reply.visible) continue; // Skip invisible replies
+                                            
+                                            let reply_user_pfp;
+                                            try {
+                                                const reply_user_response = await fetch(`http://localhost:3000/users/${reply.username}`, {method: 'GET'}); 
+                                                const reply_user_data = await reply_user_response.json();
+                                                reply_user_pfp = reply_user_data.profilePicture;
+                                            } catch (err) {
+                                                console.error('Error fetching reply user profile:', err);
+                                                reply_user_pfp = null;
+                                            }
+                                            
+                                            const levelTwoDiscussion = document.createElement('div');
+                                            levelTwoDiscussion.className = 'level_two_discussion';
+                                            levelTwoDiscussion.id = 'discussion_item';
+                                            
+                                            const replyUserIconHTML = reply_user_pfp 
+                                                ? `<img src="${reply_user_pfp}" alt="Profile" style="width: 30px; height: 30px; border-radius: 50%; margin-right:0.75em">`
+                                                : `<i class='bx bxs-user-circle'></i>`;
+                                            
+                                            levelTwoDiscussion.innerHTML = `
+                                                <div id="discussion_item_header">
+                                                    <div id="discussion_item_header_user">
+                                                        ${replyUserIconHTML}
+                                                        <p>${reply.username}</p>
+                                                    </div>                    
+                                                </div>
+                                                <div id="discussion_item_content">
+                                                    <p>${reply.reply}</p>
+                                                </div>
+                                                <div id="discussion_item_reply_count">
+                                                </div>
+                                            `;
+                                            
+                                            commentContainer.appendChild(levelTwoDiscussion);
+                                        }
+                                    }
+                                } catch (reply_err) {
+                                    console.error('Error fetching replies for comment:', comment.id_comment, reply_err);
+                                }
+                                
+                                discussion_space.appendChild(commentContainer);
+                            }
+                        } else {
+                            discussion_space.innerHTML = `<p>No comments on this post yet.</p>`;
+                        }                        
+                    } else {
+                        console.error('Failed to fetch comments:', get_comments.status);
+                    }
+                } catch (err) {
+                    console.error('Error in comments section:', err);
+                }
             }
         } catch (err) {
             console.error(err);

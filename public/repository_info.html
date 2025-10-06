@@ -120,7 +120,7 @@
             <aside id="repository_discussion_right">
                 <div id="discussion_space">
 
-                    <div class="discussion_thread"> 
+                    <!-- <div class="discussion_thread"> 
                         <div class="level_one_discussion" id="discussion_item">
                             <div id="discussion_item_header">
                                 <div id="discussion_item_header_user">
@@ -136,9 +136,9 @@
                                 <p>3 replies <i class='bx bx-chevron-right'></i></p>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
 
-                    <div class="discussion_thread">
+                    <!-- <div class="discussion_thread">
                         <div class="level_one_discussion" id="discussion_item">
                             <div id="discussion_item_header">
                                 <div id="discussion_item_header_user">
@@ -160,7 +160,6 @@
                                     <i class='bx bxs-user-circle' ></i>
                                     <p>username</p>
                                 </div>                    
-                                <i class='bx bx-reply' id="reply_arrow"></i>
                             </div>
                             <div id="discussion_item_content">
                                 <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Excepturi, magnam placeat libero deleniti eum laudantium itaque doloribus nesciunt ex enim?</p>
@@ -169,12 +168,17 @@
                                 
                             </div>
                         </div>
-                    </div>
-                    
-                </div>
+                    </div> -->
+                </div> 
                 <div id="message_space">
-                    <input type="text" name="" id="">
-                    <i class='bx bxs-send' ></i>
+                    <div>
+                        <p id="change_reply_main">Reply in main</p>
+                        <p id="replying_message">Comment in main thread</p>
+                    </div>
+                    <div> 
+                        <input type="text" name="message_input" id="message_input">
+                        <i class='bx bxs-send' id="send_message"></i>
+                    </div>                    
                 </div>
             </aside>
         </div>
