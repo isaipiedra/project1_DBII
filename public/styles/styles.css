@@ -186,6 +186,7 @@ html {
     height: calc(100vh - 4em);
     flex-direction: column;
     max-height: 100%;
+    width: 11%;
     display: none;
 }
 
@@ -292,6 +293,7 @@ html {
     top: 0;
     height: calc(100vh - 4em);
     flex-direction: column;
+    width: 11%;
     display: none;
 }
 
@@ -342,7 +344,7 @@ html {
 
 .repository_item {
     border-bottom: solid 2px var(--lighter-purple);
-    width: 12em;
+    width: 100%;
     padding: 0.5em 0.5em;
     margin-bottom: 1em;
     cursor: pointer;

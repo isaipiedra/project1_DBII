@@ -1,6 +1,7 @@
 /* --------- DESKTOP BEHAVIOURS --------- */
 
 /* Constants */
+const notification_list = document.querySelector('#notification_list');
 const notification_opener = document.querySelector('#notification_opener');
 const user_notifications = document.querySelector('#user_notifications');
 const user_management_opener = document.querySelector('#user_management_opener');
@@ -16,12 +17,74 @@ user_management_opener.addEventListener('click', () => {
 tooltip_right_notification.addEventListener('click', () => {
     user_notifications.style = 'display:none';
     user_info_menu.style = 'visibility:visible';
+    window.location.reload();
 });
 
 notification_opener.addEventListener('click', () => {
     user_notifications.style = 'display:flex';
     user_info_menu.style = 'visibility:hidden';
 });
+
+notification_opener.addEventListener('click', async () => {
+    try {
+        let currentUser = sessionStorage.currentUser;
+
+        const response = await fetch(`http://localhost:3000/api/dataset_notification_checked`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({  
+                id_user: currentUser
+            })
+        });
+
+    } catch (err) {
+        console.error(err);
+    }
+});
+
+async function loadUserNotification() {
+    try {
+        let currentUser = sessionStorage.currentUser;
+        const response_notifications = await fetch(`/api/get_new_dataset_notifications?id_user=${currentUser}`, {method: 'GET'});
+        
+        if(response_notifications.ok) {
+            const notifications = await response_notifications.json();
+            const list_of_notifications = document.querySelector('#list_of_notifications');
+
+            let li_list = '';
+            for(const notification of notifications.notifications) {
+                let user_pfp;
+                
+                try {
+                    const user_response = await fetch(`http://localhost:3000/users/${notification}`, {method: 'GET'}); 
+                    const user_data = await user_response.json();
+                    user_pfp = user_data.profilePicture;
+                } catch (err) {
+                    console.error('Error fetching user profile:', err);
+                    user_pfp = null;
+                }
+
+                li_list += `
+                    <li class="notification">
+                        <img id="notification_user_pfp" src="${user_pfp}" alt="notification_user_pfp" width="60px" height="60px" style="border-radius: 50%; margin-right: 0.75em;">
+                        <div id="notification_iteminfo">
+                            <div id="notification_item_header">
+                                <h5>${notification}</h5>
+                                <div class="circle_notification"></div>
+                            </div>                        
+                            <p>just created a new post</p>
+                        </div>
+                    </li>`;
+            }
+
+            list_of_notifications.innerHTML = li_list;
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
 
 document.addEventListener('DOMContentLoaded', function() {
 
@@ -55,6 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
         userIcon.src = creator_pfp;
         userIcon.style = 'border-radius: 50%';
         userIcon.setAttribute('width','40');
+        userIcon.setAttribute('height','40');
         
         const username = document.createElement('p');
         username.textContent = data_username;
@@ -134,7 +198,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const response_pending = await fetch('http://localhost:3000/api/datasets/pending', {method:'GET'});
                 const result_pending = await response_pending.json();
 
-                result = result.concat(result_pending); 
+                const response_deleted = await fetch('http://localhost:3000/api/datasets/deleted', {method:'GET'});
+                const result_deleted = await response_deleted.json();
+
+                result = result.concat(result_pending, result_deleted); 
             } 
 
             let new_post;
@@ -180,4 +247,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     fillPostSection(null);
+    loadUserNotification();
 });

@@ -223,7 +223,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
             });
 
-            if (response_mongo.ok && response_redis.ok) {
+            const response_neo = await fetch(`http://localhost:3000/api/notify_dataset_upload`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id_user: result_mongo.author
+                })
+            });
+
+            if (response_mongo.ok && response_redis.ok && response_neo.ok) {
                 const message_container = document.querySelector('.message_container');
                 const title_message_box = document.querySelector('.title_message_box');
                 const content_message_box = document.querySelector('.content_message_box');
@@ -239,10 +249,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 content_message_box.appendChild(new_p);
 
                 message_container.style = 'display:flex;';
-
-                let new_delete_btn = document.createElement('button');
-                new_delete_btn.innerHTML = 'Delete';
-                new_delete_btn.id = 'btn_message_delete';
 
                 setTimeout(() => {
                     window.location.reload();

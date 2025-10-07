@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
             tagContent += `
                 
                 <li>
-                    <img src="${follower_pfp}" width="30" style="border-radius:50%"></img>
+                    <img src="${follower_pfp}" width="30" height="30" style="border-radius:50%"></img>
                     <a href="user_profile.html?username=${follower}" style="text-decoration: none; color: inherit;">
                         ${follower}
                     </a>

@@ -16,7 +16,7 @@
         </div>
 
         <div id="username_and_image">
-            <img id="user_profilepicture" src="" alt="user_profilepicture" width="60px">
+            <img id="user_profilepicture" src="" alt="user_profilepicture" width="60px" height="60px">
             <p id="username">My username</p>
         </div>
 
@@ -57,7 +57,7 @@
             <div>
                 <a href="desktop.html"><i class='bx bx-chevron-left' id="user_back_arrow"></i></a>              
             </div>        
-            <h1><input type="text" value="Repository name" id="repo_name"><i class="bx bx-image-add" id="edit_repo_image"></i><input type="file" id="repo_image_input" style="display: none;" accept="image/*"></h1>
+            <h1><input type="text" value="Repository name" id="repo_name"><i class="bx bx-image-add" id="edit_repo_image" maxlength="25"></i><input type="file" id="repo_image_input" style="display: none;" accept="image/*"></h1>
         </section>
 
         <div id="repository_details">
@@ -76,7 +76,7 @@
                         
                     </div>
                     <div class="left_btns">
-                        <button class="play_btn" id="upload_videos_btn" type="button">Upload guide</button><input type="file" id="repo_videos_input" style="display: none;" accept="video/*" multiple>
+                        <button class="play_btn" id="upload_videos_btn" type="button">Upload guide</button><input type="file" id="repo_videos_input" style="display: none;" accept="video/*">
                         <button class="download_btn" id="upload_files_btn" type="button">Upload files</button><input type="file" id="repo_files_input" style="display: none;" multiple>
                     </div>
                 </section>
@@ -181,7 +181,7 @@
             </div>
 
             <div class="btns_message_box">
-                <button id="btn_message_primary">Click me</button>
+                <!-- <button id="btn_message_primary">Click me</button> -->
             </div>               
         </div>
         <div class="overlay"></div>

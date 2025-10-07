@@ -35,6 +35,29 @@ upload_files_btn.addEventListener('click', () => {
 
 let allSelectedFiles = [];
 
+repo_videos_input.addEventListener('change', (event) => {
+    const newFiles = Array.from(event.target.files);
+    
+    if (newFiles.length > 0) {
+        const message_container = document.querySelector('.message_container');
+        const title_message_box = document.querySelector('.title_message_box');
+        const content_message_box = document.querySelector('.content_message_box');
+        
+        content_message_box.innerHTML = '';
+
+        let new_p = document.createElement('p');
+
+        title_message_box.children[0].innerHTML = 'Video added'; 
+
+        new_p.innerHTML = 'The video was added succesfully.';
+
+        content_message_box.appendChild(new_p);
+
+        message_container.style = 'display:flex;';
+        return;
+    }
+});
+
 repo_files_input.addEventListener('change', (event) => {
     const newFiles = Array.from(event.target.files);
     
@@ -126,7 +149,21 @@ repo_image_input.addEventListener('change', (event) => {
     if (selectedFile) {
         // Check if the file is an image
         if (!selectedFile.type.startsWith('image/')) {
-            alert('Please select an image file');
+            const message_container = document.querySelector('.message_container');
+            const title_message_box = document.querySelector('.title_message_box');
+            const content_message_box = document.querySelector('.content_message_box');
+            
+            content_message_box.innerHTML = '';
+
+            let new_p = document.createElement('p');
+
+            title_message_box.children[0].innerHTML = 'Alert'; 
+
+            new_p.innerHTML = 'Please select an image file';
+
+            content_message_box.appendChild(new_p);
+
+            message_container.style = 'display:flex;';
             repo_image_input.value = ''; // Clear the input
             return;
         }
@@ -140,8 +177,23 @@ repo_image_input.addEventListener('change', (event) => {
         };
         
         reader.onerror = function() {
-            alert('Error reading the image file');
+            const message_container = document.querySelector('.message_container');
+            const title_message_box = document.querySelector('.title_message_box');
+            const content_message_box = document.querySelector('.content_message_box');
+            
+            content_message_box.innerHTML = '';
+
+            let new_p = document.createElement('p');
+
+            title_message_box.children[0].innerHTML = 'Alert'; 
+
+            new_p.innerHTML = 'Error reading the image file';
+
+            content_message_box.appendChild(new_p);
+
+            message_container.style = 'display:flex;';
             repo_image_input.value = ''; // Clear the input
+            return;
         };
         
         // Read the file as Data URL
@@ -154,19 +206,47 @@ repo_image_input.addEventListener('change', (event) => {
 submit_repo_btn.addEventListener('click', async () => {
     // Validate required fields
     if (!repo_name.value.trim()) {
-        alert('Please enter a dataset name');
+        const message_container = document.querySelector('.message_container');
+        const title_message_box = document.querySelector('.title_message_box');
+        const content_message_box = document.querySelector('.content_message_box');
+        
+        content_message_box.innerHTML = '';
+
+        let new_p = document.createElement('p');
+
+        title_message_box.children[0].innerHTML = 'Alert'; 
+
+        new_p.innerHTML = 'Please enter a valid data set name';
+
+        content_message_box.appendChild(new_p);
+
+        message_container.style = 'display:flex;';
         return;
     }
 
     if (!repo_description.value.trim()) {
-        alert('Please enter a dataset description');
+        const message_container = document.querySelector('.message_container');
+        const title_message_box = document.querySelector('.title_message_box');
+        const content_message_box = document.querySelector('.content_message_box');
+        
+        content_message_box.innerHTML = '';
+
+        let new_p = document.createElement('p');
+
+        title_message_box.children[0].innerHTML = 'Alert'; 
+
+        new_p.innerHTML = 'Please enter a dataset description';
+
+        content_message_box.appendChild(new_p);
+
+        message_container.style = 'display:flex;';
         return;
     }
 
-    if (!author) {
+    /* if (!author) {
         alert('User not logged in');
         return;
-    }
+    } */
 
     try {
         // Create FormData object
@@ -233,13 +313,25 @@ submit_repo_btn.addEventListener('click', async () => {
             const result_redis = await response_redis.json();
 
             if(response_redis.ok) {
-                // Show success message
-                alert('Dataset submitted successfully!');
+                const message_container = document.querySelector('.message_container');
+                const title_message_box = document.querySelector('.title_message_box');
+                const content_message_box = document.querySelector('.content_message_box');
                 
-                // Clear form
-                clearForm();
-                
-                window.location.href = 'desktop.html';
+                content_message_box.innerHTML = '';
+
+                let new_p = document.createElement('p');
+
+                title_message_box.children[0].innerHTML = 'Success'; 
+
+                new_p.innerHTML = 'The dataset was created successfully';
+
+                content_message_box.appendChild(new_p);
+
+                message_container.style = 'display:flex;';
+
+                setTimeout(() => {
+                    window.location.href = 'desktop.html';
+                }, 1500);                
             }
         } catch (err) {
             console.error('Error submitting dataset to redis:', err);
@@ -249,9 +341,9 @@ submit_repo_btn.addEventListener('click', async () => {
         
         // Show error message to user
         if (error.message.includes('network') || error.message.includes('fetch')) {
-            alert('Network error. Please check your connection and try again.');
+            console.error('Network error. Please check your connection and try again.');
         } else {
-            alert(`Error submitting dataset: ${error.message}`);
+            console.error(`Error submitting dataset: ${error.message}`);
         }
     } finally {
         // Reset button state

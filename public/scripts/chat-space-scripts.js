@@ -1,4 +1,3 @@
-// chat-space-scripts.js - Versión corregida
 class ChatSpace {
     constructor() {
         this.currentConversationId = null;
@@ -46,14 +45,26 @@ class ChatSpace {
         this.updateUserInfo();
     }
 
-    updateUserInfo() {
+    async updateUserInfo() {
         // Update the user background section
         const userBackground = document.getElementById('user_background');
         if (userBackground) {
-            const userIcon = userBackground.querySelector('.bxs-user-circle');
+            const userIcon = userBackground.querySelector('#user_pfp');
             const userName = userBackground.querySelector('h1');
             
             if (userName) userName.textContent = this.otherUser.name;
+
+            let follower_pfp;
+            try {
+                const user_follower = await fetch(`http://localhost:3000/users/${this.otherUser.name}`, {method:'GET'}); 
+                const follow = await user_follower.json();
+
+                follower_pfp = follow.profilePicture;
+            } catch (err) {
+                console.error(err);
+            }
+
+            userIcon.src = follower_pfp;
         }
     }
 
@@ -248,6 +259,7 @@ class ChatSpace {
             // Recargar mensajes para mostrar el nuevo
             await this.loadConversationMessages();
             
+            window.location.reload();
         } catch (error) {
             console.error('Error sending message:', error);
             this.showError('Failed to send message');
