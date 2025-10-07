@@ -110,11 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Redirigir basado en el rol del usuario
                 setTimeout(() => {
-                    if (result.user.admin === true) {
-                        window.location.href = 'admin/desktop.html';
-                    } else {
-                        window.location.href = 'desktop.html';
-                    }
+                    window.location.href = 'desktop.html';
                 }, 1000);
                 
             } else {
@@ -170,9 +166,6 @@ document.addEventListener('DOMContentLoaded', function() {
             loginForm.dispatchEvent(new Event('submit'));
         }
     });
-
-    // Verificar si ya está logueado y redirigir
-    checkAndRedirect();
 });
 
 // Utility function to check if user is logged in
@@ -209,12 +202,7 @@ function logout() {
 function checkAndRedirect() {
     if (checkLoginStatus()) {
         if (window.location.pathname.includes('login.html')) {
-            // Redirigir a la página correcta basada en el rol
-            if (isAdminUser()) {
-                window.location.href = 'admin/desktop.html';
-            } else {
-                window.location.href = 'desktop.html';
-            }
+            window.location.href = 'desktop.html';
         }
     }
 }
@@ -231,11 +219,11 @@ function requireAuth() {
 // Proteger páginas de admin
 function requireAdminAuth() {
     if (!checkLoginStatus()) {
-        window.location.href = '../login.html';
+        window.location.href = 'login.html';
         return false;
     }
     if (!isAdminUser()) {
-        window.location.href = '../desktop.html';
+        window.location.href = 'desktop.html';
         return false;
     }
     return true;

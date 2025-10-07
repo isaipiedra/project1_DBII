@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const dataset_id = urlParams.get('id');
 
     const delete_btn = document.querySelector('#delete_btn');
+    const approve_btn = document.querySelector('#approve_btn');
     const play_btn = document.querySelector('#play_btn');
     const close_video_btn = document.querySelector('#close_video_btn');
     const download_btn = document.querySelector('#download_btn');
@@ -191,7 +192,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const response_mongo = await fetch(`http://localhost:3000/api/datasets/${dataset_id}/delete`, {method:'PATCH'});                
                 const result_mongo = await response_mongo.json();
 
-                const response_redis = await fetch(`http://localhost:3000/users/${sessionStorage.currentUser}/repositories/${dataset_id}`, {method:'DELETE'});
+                const response_redis = await fetch(`http://localhost:3000/users/${result_mongo.author}/repositories/${dataset_id}`, {method:'DELETE'});
                 const result_redis = await response_redis.json();
 
                 if(response_mongo.ok && response_redis.ok) {
@@ -205,6 +206,51 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         btns_message_box.appendChild(new_delete_btn);
+    });
+
+    approve_btn.addEventListener('click', async () => {
+        try {
+            const response_mongo = await fetch(`http://localhost:3000/api/datasets/${dataset_id}/approve`, {method:'PATCH'});
+            const result_mongo = await response_mongo.json();
+
+            const response_redis = await fetch(`http://localhost:3000/users/${result_mongo.author}/repositories/${dataset_id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    isPublic: true
+                })
+            });
+
+            if (response_mongo.ok && response_redis.ok) {
+                const message_container = document.querySelector('.message_container');
+                const title_message_box = document.querySelector('.title_message_box');
+                const content_message_box = document.querySelector('.content_message_box');
+                
+                content_message_box.innerHTML = '';
+
+                let new_p = document.createElement('p');
+
+                title_message_box.children[0].innerHTML = 'Success'; 
+
+                new_p.innerHTML = 'The dataset is now approved';
+
+                content_message_box.appendChild(new_p);
+
+                message_container.style = 'display:flex;';
+
+                let new_delete_btn = document.createElement('button');
+                new_delete_btn.innerHTML = 'Delete';
+                new_delete_btn.id = 'btn_message_delete';
+
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            }
+        } catch (err) {
+            console.error(err);
+        }        
     });
 
     see_downloads.addEventListener('click', async () => {
@@ -385,6 +431,7 @@ document.addEventListener('DOMContentLoaded', function() {
     async function loadRepoInfo() {
         const repository_image = document.querySelector('#repository_image');
 
+        const repository_status = document.querySelector('#repository_status');
         const repository_name = document.querySelector('#repository_name');
         const repository_owner = document.querySelector('#repository_owner');
         const repository_file_amount = document.querySelector('#repository_file_amount');
@@ -399,12 +446,22 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await response.json();
 
             if(response.ok) {
-                if(result.author === sessionStorage.currentUser) {
+                if (sessionStorage.isAdmin === 'true') {
+                    approve_btn.style = 'display: block';
+                }
+
+                if(result.author === sessionStorage.currentUser || sessionStorage.isAdmin === 'true') {
                     delete_btn.style = 'display: block';
+                    see_downloads.style = 'display: block';
                 }
 
                 repository_image.style.backgroundImage = `url(${asUrl(result.foto_descripcion.file_id)})`;
 
+                if (result.status === 'Aprobado') {
+                    repository_status.innerHTML = 'Status: Approved'
+                } else if (result.status === 'Pendiente') {
+                    repository_status.innerHTML = 'Status: Pending'
+                }
                 repository_name.innerHTML = result.name;
                 repository_owner.innerHTML = `Owner: ${result.author}`;
                 repository_files = result.archivos;
@@ -444,8 +501,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         if(comments.length > 0) {
                             for (const comment of comments) {
-                                if (!comment.visible) continue;
-                                
+                                if(sessionStorage.isAdmin != 'true') {
+                                    if (!comment.visible) continue;
+                                }
+                                                                
                                 let user_pfp;
 
                                 try {
@@ -475,8 +534,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <div id="discussion_item_header_user">
                                             ${userIconHTML}
                                             <p>${comment.user_name}</p>
-                                        </div>                    
-                                        <i class='bx bx-reply' id="reply_arrow"></i>
+                                        </div>
+                                        <div>
+                                            <i class='bx bx-reply' id="reply_arrow"></i>
+                                            <i class='bx bx-minus' id="delete_comment"></i>
+                                        </div>                                                            
                                     </div>
                                     <div id="discussion_item_content">
                                         <p>${comment.comment}</p>
@@ -493,6 +555,61 @@ document.addEventListener('DOMContentLoaded', function() {
                                     id_replying_comment = comment.id_comment;
                                     const replying_message = document.querySelector('#replying_message');
                                     replying_message.innerHTML = `Replying to: ${replying_to}`;
+                                });
+
+                                const delete_comment = levelOneDiscussion.querySelector('#delete_comment');
+                                if (sessionStorage.isAdmin === 'true') {
+                                    delete_comment.style = 'display: initial;';
+                                }
+                                
+                                delete_comment.addEventListener('click', async () => {
+                                    const message_container = document.querySelector('.message_container');
+                                    const title_message_box = document.querySelector('.title_message_box');
+                                    const content_message_box = document.querySelector('.content_message_box');
+                                    const btns_message_box = document.querySelector('.btns_message_box');
+
+                                    content_message_box.innerHTML = '';
+                                    btns_message_box.innerHTML = '';
+
+                                    let new_p = document.createElement('p');
+
+                                    title_message_box.children[0].innerHTML = 'Hide comment'; 
+
+                                    new_p.innerHTML = 'You are about to delete this comment, this action will make the comment invisible to regular users, meaning you will continue to see it but others will not unless they are admin. If you are sure you want to hide this comment click on the button below.';
+
+                                    content_message_box.appendChild(new_p);
+
+                                    message_container.style = 'display:flex;';
+
+                                    let new_delete_btn = document.createElement('button');
+                                    new_delete_btn.innerHTML = 'Delete';
+                                    new_delete_btn.id = 'btn_message_delete';
+
+                                    new_delete_btn.addEventListener('click', async () => {
+                                        try {
+                                            const response_delete = await fetch('/api/update_comment_visibility', {
+                                                method: 'PUT',
+                                                headers: {
+                                                'Content-Type': 'application/json',
+                                                },
+                                                body: JSON.stringify({
+                                                    id_dataset: dataset_id,
+                                                    id_comment: comment.id_comment,
+                                                    visible: false
+                                                })
+                                            });
+
+                                            if (response_delete.ok) {
+                                                setTimeout(() => {
+                                                    window.location.reload();
+                                                }, 1500);
+                                            }             
+                                        } catch (err) {
+                                            console.error(err);
+                                        }
+                                    });
+
+                                    btns_message_box.appendChild(new_delete_btn);
                                 });
                                 
                                 commentContainer.appendChild(levelOneDiscussion);

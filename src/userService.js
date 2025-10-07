@@ -123,7 +123,7 @@ class UserService {
       throw new Error('Usuario no encontrado');
     }
 
-    const { id, name, description, language, isPublic = true } = repositoryData;
+    const { id, name, description, language, isPublic = false } = repositoryData;
     
     if (!name) {
       throw new Error('El nombre del repositorio es requerido');

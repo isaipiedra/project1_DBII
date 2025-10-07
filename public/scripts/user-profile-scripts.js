@@ -136,7 +136,7 @@ async function loadUserRepositories(username) {
         
         if (response.ok) {
             const repositories = await response.json();
-            displayUserRepositories(repositories);
+            displayUserRepositories(repositories, username);
         } else {
             displayNoRepositories();
         }
@@ -146,7 +146,7 @@ async function loadUserRepositories(username) {
     }
 }
 
-function displayUserRepositories(repositories) {
+function displayUserRepositories(repositories, username) {
     const repoList = document.querySelector('#user_repository_list ul');
     if (!repoList) return;
     
@@ -154,14 +154,22 @@ function displayUserRepositories(repositories) {
         displayNoRepositories();
         return;
     }
+
+    let li_list = '';
+    for (const repo of repositories) {
+        if (username != sessionStorage.currentUser) {
+            if (!repo.isPublic) continue;
+        }
+        
+        li_list += `
+            <li>
+                <a href="repository_info.html?id=${repo.id}" style="text-decoration: none; color: inherit;">
+                    ${escapeHtml(repo.name)}
+                </a>
+            </li>`;
+    }
     
-    repoList.innerHTML = repositories.map(repo => `
-        <li>
-            <a href="repository_info.html?id=${repo.id}" style="text-decoration: none; color: inherit;">
-                ${escapeHtml(repo.name)}
-            </a>
-        </li>
-    `).join('');
+    repoList.innerHTML =li_list;
 }
 
 function displayNoRepositories() {
@@ -263,7 +271,7 @@ function setupSearch() {
             
             resultItem.addEventListener('click', function() {
                 // Redirect to this user's profile
-                window.location.href = `user-profile.html?username=${encodeURIComponent(user.username)}`;
+                window.location.href = `user_profile.html?username=${encodeURIComponent(user.username)}`;
             });
             
             searchResults.appendChild(resultItem);

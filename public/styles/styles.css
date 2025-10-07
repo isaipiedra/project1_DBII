@@ -779,6 +779,11 @@ html {
     justify-content: space-between;
 }
 
+.right_btns {
+    display: flex;
+    flex-direction: row;
+}
+
 #delete_btn {
     display: none;
 }
@@ -916,6 +921,17 @@ html {
 
 #reply_arrow:hover {
     color: var(--icons-black);
+    transition: ease 0.2s;
+}
+
+#delete_comment {
+    font-size: 30px;
+    cursor: pointer;
+    display: none;
+}
+
+#delete_comment:hover {
+    color: var(--hover-delete-button);
     transition: ease 0.2s;
 }
 
@@ -1159,6 +1175,16 @@ html {
 #user_background input:focus {
     outline: none;
     border-bottom: 2px solid var(--white);
+}
+
+#back_arrow {
+    font-size: 60px;
+    cursor: pointer;
+}
+
+#back_arrow:hover  {
+    color: var(--icons-black);
+    transition: 0.2s ease;
 }
 
 #user_back_arrow {
