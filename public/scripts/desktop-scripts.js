@@ -3,6 +3,15 @@
 /* Constants */
 const notification_opener = document.querySelector('#notification_opener');
 const user_notifications = document.querySelector('#user_notifications');
+const user_management_opener = document.querySelector('#user_management_opener');
+
+if(sessionStorage.isAdmin === 'true') {
+    user_management_opener.style = 'display:block;';
+}
+
+user_management_opener.addEventListener('click', () => {
+    window.location.href = 'user-management.html';
+});
 
 tooltip_right_notification.addEventListener('click', () => {
     user_notifications.style = 'display:none';
@@ -13,7 +22,6 @@ notification_opener.addEventListener('click', () => {
     user_notifications.style = 'display:flex';
     user_info_menu.style = 'visibility:hidden';
 });
-
 
 document.addEventListener('DOMContentLoaded', function() {
 
@@ -119,8 +127,16 @@ document.addEventListener('DOMContentLoaded', function() {
     async function fillPostSection(search_param) {
         try {
             const response = await fetch('http://localhost:3000/api/datasets/approved', {method:'GET'});
-            const result = await response.json();
+
+            let result = await response.json();
             
+            if(sessionStorage.isAdmin === 'true') {
+                const response_pending = await fetch('http://localhost:3000/api/datasets/pending', {method:'GET'});
+                const result_pending = await response_pending.json();
+
+                result = result.concat(result_pending); 
+            } 
+
             let new_post;
             const main_post_feed = document.querySelector('#main_post_feed');
 
@@ -150,8 +166,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     let dataset_coincidence = data_title.toLowerCase().includes(search_param.trim().toLowerCase());
                     let user_name_coincidence = data_username.toLowerCase().includes(search_param.trim().toLowerCase());
+                    let desc_coincidence = data_description.toLowerCase().includes(search_param.trim().toLowerCase());
 
-                    if (dataset_coincidence || user_name_coincidence) {
+                    if (dataset_coincidence || user_name_coincidence || desc_coincidence) {
                         new_post = createPost(creator_pfp, dataset_id, data_username, data_fileCount, data_date, data_title, data_description);
                         main_post_feed.appendChild(new_post);
                     }
