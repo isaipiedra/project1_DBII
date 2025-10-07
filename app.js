@@ -34,7 +34,8 @@ import { init_cassandra,
     getApprovedDatasets,
     getPendingDatasets,
     getDatasetsByAuthor,
-    getDatasetsByDescription} from './Databases/Mongodb/mongodb.js';
+    getDatasetsByDescription.
+    getDeletedDatasets} from './Databases/Mongodb/mongodb.js';
     import mongoose from 'mongoose';
     import { GridFSBucket } from 'mongodb';
 
@@ -167,6 +168,19 @@ app.get('/api/datasets/pending', async (req, res) => {
     const limit = req.query.limit ? Number(req.query.limit) : 0; // 0 = sin límite
     const skip  = req.query.skip  ? Number(req.query.skip)  : 0;
     const data  = await getPendingDatasets({ limit, skip });
+    res.json(data);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+
+// Mostrar todos los datasets eliminados
+app.get('/api/datasets/deleted', async (req, res) => {
+  try {
+    const limit = req.query.limit ? Number(req.query.limit) : 0; // 0 = sin límite
+    const skip  = req.query.skip  ? Number(req.query.skip)  : 0;
+    const data  = await getDeletedDatasets({ limit, skip });
     res.json(data);
   } catch (e) {
     res.status(400).json({ error: e.message });
