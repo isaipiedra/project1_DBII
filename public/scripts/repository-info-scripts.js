@@ -467,7 +467,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     repository_status.innerHTML = 'Status: Approved'
                 } else if (result.status === 'Pendiente') {
                     repository_status.innerHTML = 'Status: Pending'
+                } else if (result.status === 'Eliminado') {
+                    repository_status.innerHTML = 'Status: Deleted'
                 }
+
                 repository_name.innerHTML = result.name;
                 repository_owner.innerHTML = `Owner: ${result.author}`;
                 repository_files = result.archivos;
