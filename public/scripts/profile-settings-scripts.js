@@ -246,17 +246,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     } else {
                         content_message_box.lastElementChild.innerHTML = 'Password or confirmation is empty';
                     }
-                } else if ((new_psw_input.value === conf_psw_input.value) && conf_psw_input.value.lenght < 6) {
-                    if(content_message_box.lastElementChild.nodeName != 'P') {
-                        let p_msg = document.createElement('p');
-                        p_msg.innerHTML = 'The new password does not meet the security policy';
-                        p_msg.style = 'font-size: 16px; color: var(--delete-button)';
-
-                        content_message_box.appendChild(p_msg);
-                    } else {
-                        content_message_box.lastElementChild.innerHTML = 'The new password does not meet the security policy';
-                    }
-                } else if (new_psw_input.value != conf_psw_input.value) {
+                } else if (new_psw_input.value !== conf_psw_input.value) {
                     if(content_message_box.lastElementChild.nodeName != 'P') {
                         let p_msg = document.createElement('p');
                         p_msg.innerHTML = 'Password and confirmation do not match';
@@ -267,6 +257,20 @@ document.addEventListener('DOMContentLoaded', function() {
                         content_message_box.lastElementChild.innerHTML = 'Password and confirmation do not match';
                     }
                 } else {
+                    // Enhanced password validation
+                    const passwordErrors = validatePassword(new_psw_input.value);
+                    if (passwordErrors.length > 0) {
+                        if(content_message_box.lastElementChild.nodeName != 'P') {
+                            let p_msg = document.createElement('p');
+                            p_msg.innerHTML = passwordErrors.join(', ');
+                            p_msg.style = 'font-size: 16px; color: var(--delete-button)';
+                            content_message_box.appendChild(p_msg);
+                        } else {
+                            content_message_box.lastElementChild.innerHTML = passwordErrors.join(', ');
+                        }
+                        return;
+                    }
+
                     const response = await fetch(`${API_BASE_URL}/auth/login`, {
                         method: 'POST',
                         headers: {
@@ -343,6 +347,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
         message_container.style = 'display:flex;';
     });
+
+    function validatePassword(password) {
+        const errors = [];
+        
+        if (password.length < 8) {
+            errors.push('Password must be at least 8 characters');
+        }
+        
+        if (!/[A-Z]/.test(password)) {
+            errors.push('at least one capital letter');
+        }
+        
+        if (!/[a-z]/.test(password)) {
+            errors.push('at least one lowercase letter');
+        }
+        
+        if (!/\d/.test(password)) {
+            errors.push('at least one number');
+        }
+        
+        return errors;
+    }
 
     function escapeHtml(text) {
         const div = document.createElement('div');

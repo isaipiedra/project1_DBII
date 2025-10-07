@@ -183,7 +183,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const result = await response.json();
 
-            let created_userid = result.user.username;
+            // Check if the response is successful
+            if (!response.ok) {
+                // If response is not ok, throw an error with the server's message
+                throw new Error(result.error || result.message || 'Registration failed');
+            }
+
+            // Only proceed if response is successful
+            let created_userid = result.user ? result.user.username : lowercaseUsername;
 
             const response_node = await fetch(`${API_BASE_URL}/api/reg_user_graph`, {
                 method: 'POST',
@@ -198,7 +205,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const result_node = await response_node.json();
             
-            if (response.ok && response_node.ok) {
+            if (response_node.ok) {
                 // Registro exitoso
                 showSuccessMessage('Account created successfully! Redirecting to login...');
                 
@@ -208,15 +215,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, 2000);
                 
             } else {
-                // Error del servidor
-                throw new Error(result.error || 'Registration failed');
+                // Error del servidor en el segundo endpoint
+                throw new Error(result_node.error || 'Failed to create user graph node');
             }
             
         } catch (error) {
             console.error('Error during registration:', error);
             
             // Mostrar error específico al usuario
-            if (error.message.includes('usuario ya existe') || error.message.includes('already exists')) {
+            if (error.message.includes('usuario ya existe') || 
+                error.message.includes('already exists') || 
+                error.message.includes('Username already exists')) {
                 showError(document.getElementById('usernameError'), 'Username already exists');
                 document.getElementById('username').parentElement.classList.add('error');
             } else if (error.message.includes('demasiado grande')) {
