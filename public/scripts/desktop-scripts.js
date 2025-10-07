@@ -54,6 +54,12 @@ async function loadUserNotification() {
             const list_of_notifications = document.querySelector('#list_of_notifications');
 
             let li_list = '';
+
+            if(notifications.notifications.length > 0) {
+                const notification_circle = document.querySelector('#notification_circle');
+                notification_circle.style = 'display: initial';
+            }
+
             for(const notification of notifications.notifications) {
                 let user_pfp;
                 

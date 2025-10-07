@@ -435,6 +435,19 @@ html {
     cursor: pointer;
 }
 
+#notification_box {
+    display: flex;
+    flex-direction: row;
+}
+
+#notification_box #notification_circle {
+    width: 10px;
+    height: 10px;
+    background-color: var(--icons-purple);
+    border-radius: 50%;
+    display: none;
+}
+
 #user_management_opener{
     color: var(--icons-white);
     font-size: 40px;
