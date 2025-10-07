@@ -266,7 +266,7 @@ function setupSearch() {
             
             resultItem.addEventListener('click', function() {
                 // Redirect to this user's profile
-                window.location.href = `user-profile.html?username=${encodeURIComponent(user.username)}`;
+                window.location.href = `user_profile.html?username=${encodeURIComponent(user.username)}`;
             });
             
             searchResults.appendChild(resultItem);
@@ -303,50 +303,62 @@ async function startConversationWithUser(userData) {
     try {
         // Get current user from session storage
         const currentUser = sessionStorage.getItem('currentUser');
-        
-        if (!currentUser) {
-            alert('Please log in to send messages');
-            window.location.href = 'login.html';
-            return;
-        }
-        
-        // Prevent messaging yourself
-        if (currentUser === userData.username) {
-            alert('You cannot message yourself');
-            return;
-        }
-        
-        console.log(`Starting conversation between ${currentUser} and ${userData.username}`);
-        
-        // Show loading state
-        const messageBtn = document.getElementById('message_user_btn');
-        const originalText = messageBtn.textContent;
-        messageBtn.textContent = 'Starting conversation...';
-        messageBtn.disabled = true;
-        
-        // Start conversation using the function from general-scripts.js
-        const conversationId = await startNewConversation(userData.username, userData.username);
-        
-        if (conversationId) {
-            console.log('Conversation created with ID:', conversationId);
-            
-            // Redirect to chat space
-            const chatUrl = `../chat_space.html?conversation=${conversationId}&user=${encodeURIComponent(userData.username)}&userId=${encodeURIComponent(userData.username)}`;
+        const conversation_response = await fetch(`/api/conversation_exists?id_user_one=${currentUser}&id_user_two=${userData.username}`, 
+            {method:'GET'});
+
+        const conversation_results = await conversation_response.json();
+        if(conversation_results.exists)
+        {   
+            console.log("hola");
+            const chatUrl = `chat_space.html?conversation=${conversationId}&user=${encodeURIComponent(userData.username)}&userId=${encodeURIComponent(userData.username)}`;
             window.location.href = chatUrl;
+        }else{
+             if (!currentUser) {
+                alert('Please log in to send messages');
+                window.location.href = 'login.html';
+                return;
+             }
+        
+            // Prevent messaging yourself
+            if (currentUser === userData.username) {
+                alert('You cannot message yourself');
+                return;
+            }
             
-        } else {
-            // Check if conversation already exists
-            const existingConversation = await findExistingConversation(currentUser, userData.username);
             
-            if (existingConversation) {
-                console.log('Existing conversation found:', existingConversation);
-                // Redirect to existing conversation
-                const chatUrl = `../chat_space.html?conversation=${existingConversation}&user=${encodeURIComponent(userData.username)}&userId=${encodeURIComponent(userData.username)}`;
+            console.log(`Starting conversation between ${currentUser} and ${userData.username}`);
+            
+            // Show loading state
+            const messageBtn = document.getElementById('message_user_btn');
+            const originalText = messageBtn.textContent;
+            messageBtn.textContent = 'Starting conversation...';
+            messageBtn.disabled = true;
+            
+            // Start conversation using the function from general-scripts.js
+            const conversationId = await startNewConversation(userData.username, userData.username);
+            
+            if (conversationId) {
+                console.log('Conversation created with ID:', conversationId);
+                
+                // Redirect to chat space
+                const chatUrl = `../chat_space.html?conversation=${conversationId}&user=${encodeURIComponent(userData.username)}&userId=${encodeURIComponent(userData.username)}`;
                 window.location.href = chatUrl;
+                
             } else {
-                alert('Failed to start conversation. Please try again.');
+                // Check if conversation already exists
+                const existingConversation = await findExistingConversation(currentUser, userData.username);
+                
+                if (existingConversation) {
+                    console.log('Existing conversation found:', existingConversation);
+                    // Redirect to existing conversation
+                    const chatUrl = `../chat_space.html?conversation=${existingConversation}&user=${encodeURIComponent(userData.username)}&userId=${encodeURIComponent(userData.username)}`;
+                    window.location.href = chatUrl;
+                } else {
+                    alert('Failed to start conversation. Please try again.');
+                }
             }
         }
+       
         
     } catch (error) {
         console.error('Error starting conversation:', error);

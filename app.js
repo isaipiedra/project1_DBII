@@ -1207,6 +1207,25 @@ app.get('/api/get_latest_message', async (req, res) => {
   }
 });
 
+app.get('/api/conversation_exists', async(req, res)=>{
+  try{
+    const {id_user_one, id_user_two} = req.query;
+
+    if(!id_user_one || !id_user_two)
+    {
+      return res.status(400).json({error: "Falta o 'id_user_one' o 'user_two'"});
+    }
+    const validation = await conversation_exists(id_user_one, id_user_two);
+
+    res.json(validation);
+
+  }catch(error)
+  {
+    console.error("conversation_existis: ",error );
+    res.status(500).json({error: "Error en la comprobacion de existencia de conversacion"});
+  }
+
+});
 /*Cassandra methods end here*/
 
 /* Neo4j functions */

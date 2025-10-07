@@ -126,6 +126,7 @@ class ChatSpace {
         try {
             if (!this.currentConversationId) return;
 
+            console.log(this.currentConversationId);
             const response = await fetch(`/api/get_conversation_messages?id_conversation=${this.currentConversationId}`);
             
             if (!response.ok) {
@@ -220,7 +221,7 @@ class ChatSpace {
         if (!this.messageInput || !this.messageInput.value.trim()) return;
 
         const messageText = this.messageInput.value.trim();
-
+        console.log(this.currentConversationId);
         try {
             const response = await fetch('/api/send_message', {
                 method: 'POST',
