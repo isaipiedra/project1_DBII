@@ -311,17 +311,29 @@ async function startConversationWithUser(userData) {
     try {
         // Get current user from session storage
         const currentUser = sessionStorage.getItem('currentUser');
-        const conversation_response = await fetch(`/api/conversation_exists?id_user_one=${currentUser}&id_user_two=${userData.username}`, 
-            {method:'GET'});
+        const first_conversation_response = await fetch(`/api/conversation_exists?id_user_one=${currentUser}&id_user_two=${userData.username}`, {method:'GET'});
+        const second_conversation_response = await fetch(`/api/conversation_exists?id_user_one=${userData.username}&id_user_two=${currentUser}`, {method:'GET'});
 
-        const conversation_results = await conversation_response.json();
-        if(conversation_results.exists)
+        const first_conversation_results = await first_conversation_response.json();
+        const second_conversation_results = await second_conversation_response.json();
+
+        let first_exists = first_conversation_results.exists;
+        let second_exists = second_conversation_results.exists;
+
+
+        if(first_exists || second_exists)
         {   
-            let conversationId = conversation_results.id_conversation;
-            console.log("hola");
+            let conversationId = '';
+
+            if(first_exists) {
+                conversationId = first_conversation_results.id_conversation;
+            } else {
+                conversationId = second_conversation_results.id_conversation;
+            }
+
             const chatUrl = `chat_space.html?conversation=${conversationId}&user=${encodeURIComponent(userData.username)}&userId=${encodeURIComponent(userData.username)}`;
             window.location.href = chatUrl;
-        }else{
+        } else {
              if (!currentUser) {
                 alert('Please log in to send messages');
                 window.location.href = 'login.html';
@@ -367,8 +379,6 @@ async function startConversationWithUser(userData) {
                 }
             }
         }
-       
-        
     } catch (error) {
         console.error('Error starting conversation:', error);
         alert('Error starting conversation: ' + error.message);
