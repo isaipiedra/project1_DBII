@@ -16,101 +16,18 @@ notification_opener.addEventListener('click', () => {
 
 
 document.addEventListener('DOMContentLoaded', function() {
-    const searchBar = document.getElementById('search_bar');
-    const searchSection = document.getElementById('search_bar_section');
-    const main_post_feed = document.querySelector('#main_post_feed');
-    
-    // Create search results container
-    const searchResults = document.createElement('div');
-    searchResults.id = 'search_results';
-    searchSection.appendChild(searchResults);
 
-    // Debounce function to limit API calls
-    let searchTimeout;
-    searchBar.addEventListener('input', function(e) {
-        clearTimeout(searchTimeout);
-        const query = e.target.value.trim();
-        
-        if (query.length < 2) {
-            searchResults.style.display = 'none';
-            return;
-        }
-        
-        searchTimeout = setTimeout(() => {
-            searchUsers(query);
-        }, 300);
-    });
+    const searchBar = document.querySelector('#search_bar');
 
-    // Close search results when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!searchSection.contains(e.target)) {
-            searchResults.style.display = 'none';
+    searchBar.addEventListener('input', async () => {
+        let search_param = searchBar.value;
+        if(search_param === '') {
+            fillPostSection(null);
+        } else {
+            fillPostSection(search_param);
+            console.log();
         }
     });
-
-    // Search users function
-    async function searchUsers(query) {
-        try {
-            const response = await fetch(`/api/users/search?query=${encodeURIComponent(query)}`);
-            
-            if (!response.ok) {
-                throw new Error('Search failed');
-            }
-            
-            const users = await response.json();
-            displaySearchResults(users);
-            
-        } catch (error) {
-            console.error('Search error:', error);
-            searchResults.innerHTML = '<div class="search-error">Error searching users</div>';
-            searchResults.style.display = 'block';
-        }
-    }
-
-    // Display search results
-    function displaySearchResults(users) {
-        if (users.length === 0) {
-            searchResults.innerHTML = '<div class="search-no-results">No users found</div>';
-            searchResults.style.display = 'block';
-            return;
-        }
-
-        searchResults.innerHTML = '';
-        
-        users.forEach(user => {
-            const resultItem = document.createElement('div');
-            resultItem.className = 'search-result-item';
-            
-            // User profile picture or default icon
-            const profilePicture = user.profilePicture ? 
-                `<img src="/users/${encodeURIComponent(user.username)}/profile-picture" 
-                      alt="${user.username}">` :
-                `<i class='bx bxs-user-circle'></i>`;
-            
-            resultItem.innerHTML = `
-                <div class="search-result-profile-pic">
-                    ${profilePicture}
-                </div>
-                <span class="search-result-username">${escapeHtml(user.username)}</span>
-            `;
-            
-            resultItem.addEventListener('click', function() {
-                // FIXED: Use the correct path to user-profile.html
-                window.location.href = `../user_profile.html?username=${encodeURIComponent(user.username)}`;
-            });
-            
-            searchResults.appendChild(resultItem);
-        });
-        
-        searchResults.style.display = 'block';
-    }
-
-    // Escape HTML to prevent XSS
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
 
     //Create a new post 
     function createPost(creator_pfp, dataset_id, data_username, data_fileCount, data_date, data_title, data_description) {
@@ -199,11 +116,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     //Fill posts section 
-    async function fillPostSection() {
-        let new_post;
+    async function fillPostSection(search_param) {
         try {
             const response = await fetch('http://localhost:3000/api/datasets/approved', {method:'GET'});
             const result = await response.json();
+            
+            let new_post;
+            const main_post_feed = document.querySelector('#main_post_feed');
+
+            main_post_feed.innerHTML = '';
 
             for (const dataset of result) {
                 let creator_pfp, data_username;
@@ -223,13 +144,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 let data_title = dataset.name;
                 let data_description = dataset.description;
                 
-                new_post = createPost(creator_pfp, dataset_id, data_username, data_fileCount, data_date, data_title, data_description);
-                main_post_feed.appendChild(new_post);
+                if (search_param === null) {
+                    new_post = createPost(creator_pfp, dataset_id, data_username, data_fileCount, data_date, data_title, data_description);
+                    main_post_feed.appendChild(new_post);
+                } else {
+                    let dataset_coincidence = data_title.toLowerCase().includes(search_param.trim().toLowerCase());
+                    let user_name_coincidence = data_username.toLowerCase().includes(search_param.trim().toLowerCase());
+
+                    if (dataset_coincidence || user_name_coincidence) {
+                        new_post = createPost(creator_pfp, dataset_id, data_username, data_fileCount, data_date, data_title, data_description);
+                        main_post_feed.appendChild(new_post);
+                    }
+                }                
             }
         } catch (err) {
             console.error(err);
         } 
     }
 
-    fillPostSection();
+    fillPostSection(null);
 });
