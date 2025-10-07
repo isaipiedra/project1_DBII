@@ -16,6 +16,19 @@ notification_opener.addEventListener('click', () => {
 
 
 document.addEventListener('DOMContentLoaded', function() {
+
+    const searchBar = document.querySelector('#search_bar');
+
+    searchBar.addEventListener('input', async () => {
+        let search_param = searchBar.value;
+        if(search_param === '') {
+            fillPostSection(null);
+        } else {
+            fillPostSection(search_param);
+            console.log();
+        }
+    });
+
     //Create a new post 
     function createPost(creator_pfp, dataset_id, data_username, data_fileCount, data_date, data_title, data_description) {
         // Create main post container
@@ -103,11 +116,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     //Fill posts section 
-    async function fillPostSection() {
-        let new_post;
+    async function fillPostSection(search_param) {
         try {
             const response = await fetch('http://localhost:3000/api/datasets/approved', {method:'GET'});
             const result = await response.json();
+            
+            let new_post;
+            const main_post_feed = document.querySelector('#main_post_feed');
+
+            main_post_feed.innerHTML = '';
 
             for (const dataset of result) {
                 let creator_pfp, data_username;
@@ -127,13 +144,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 let data_title = dataset.name;
                 let data_description = dataset.description;
                 
-                new_post = createPost(creator_pfp, dataset_id, data_username, data_fileCount, data_date, data_title, data_description);
-                main_post_feed.appendChild(new_post);
+                if (search_param === null) {
+                    new_post = createPost(creator_pfp, dataset_id, data_username, data_fileCount, data_date, data_title, data_description);
+                    main_post_feed.appendChild(new_post);
+                } else {
+                    let dataset_coincidence = data_title.toLowerCase().includes(search_param.trim().toLowerCase());
+                    let user_name_coincidence = data_username.toLowerCase().includes(search_param.trim().toLowerCase());
+
+                    if (dataset_coincidence || user_name_coincidence) {
+                        new_post = createPost(creator_pfp, dataset_id, data_username, data_fileCount, data_date, data_title, data_description);
+                        main_post_feed.appendChild(new_post);
+                    }
+                }                
             }
         } catch (err) {
             console.error(err);
         } 
     }
 
-    fillPostSection();
+    fillPostSection(null);
 });
