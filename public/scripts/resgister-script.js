@@ -142,6 +142,13 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.disabled = true;
         
         try {
+            // Convert username to lowercase before sending
+            const usernameInput = document.getElementById('username');
+            const originalUsername = usernameInput.value.trim();
+            const lowercaseUsername = originalUsername.toLowerCase();
+            
+            // Update the input value with lowercase username for consistency
+            usernameInput.value = lowercaseUsername;
 
             // Obtener la imagen como base64 si existe
             let profilePictureBase64 = null;
@@ -160,15 +167,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 profilePicture: profilePictureBase64
             };
             
-            const username = document.getElementById('username').value.trim();
-
             // Validar el tamaño de la imágen
             if (profilePictureBase64 && profilePictureBase64.length > 1.5 * 1024 * 1024) {
                 throw new Error('La imagen es demasiado grande. Máximo 1MB permitido.');
             }
             
-            // Enviar datos a la API
-            const response = await fetch(`${API_BASE_URL}/users/${username}`, {
+            // Enviar datos a la API usando el username en minúsculas
+            const response = await fetch(`${API_BASE_URL}/users/${lowercaseUsername}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -283,6 +288,7 @@ document.addEventListener('DOMContentLoaded', function() {
             reader.readAsDataURL(file);
         });
     }
+
     function validateForm() {
         let isValid = true;
         
@@ -314,20 +320,22 @@ document.addEventListener('DOMContentLoaded', function() {
             isValid = false;
         }
         
-        if (password.value.length > 0 && password.value.length < 8) {
-            showError(document.getElementById('passwordError'), 'Password must be at least 8 characters');
+        // Enhanced password validation
+        const passwordErrors = validatePassword(password.value);
+        if (password.value && passwordErrors.length > 0) {
+            showError(document.getElementById('passwordError'), passwordErrors.join(', '));
             password.parentElement.classList.add('error');
             isValid = false;
         }
         
-        // Validar fecha de nacimiento
+        // Validar fecha de nacimiento - changed to 16+ years
         const dob = new Date(document.getElementById('dateOfBirth').value);
         if (document.getElementById('dateOfBirth').value) {
             const today = new Date();
-            const minAgeDate = new Date(today.getFullYear() - 13, today.getMonth(), today.getDate());
+            const minAgeDate = new Date(today.getFullYear() - 16, today.getMonth(), today.getDate());
             
             if (dob > minAgeDate) {
-                showError(document.getElementById('dobError'), 'You must be at least 13 years old');
+                showError(document.getElementById('dobError'), 'You must be at least 16 years old');
                 document.getElementById('dateOfBirth').parentElement.classList.add('error');
                 isValid = false;
             }
@@ -344,8 +352,55 @@ document.addEventListener('DOMContentLoaded', function() {
         
         return isValid;
     }
+
+    // Enhanced password validation function
+    function validatePassword(password) {
+        const errors = [];
+        
+        if (password.length < 8) {
+            errors.push('at least 8 characters');
+        }
+        
+        if (!/[A-Z]/.test(password)) {
+            errors.push('one capital letter');
+        }
+        
+        if (!/[a-z]/.test(password)) {
+            errors.push('one lowercase letter');
+        }
+        
+        if (!/\d/.test(password)) {
+            errors.push('one number');
+        }
+        
+        // Map error messages to be more user-friendly
+        if (errors.length > 0) {
+            return ['Password must contain: ' + errors.join(', ')];
+        }
+        
+        return [];
+    }
     
-    // Real-time validation (mantener igual)
+    // Real-time validation for password
+    document.getElementById('password').addEventListener('input', function() {
+        const password = this.value;
+        
+        if (password) {
+            const passwordErrors = validatePassword(password);
+            if (passwordErrors.length > 0) {
+                showError(document.getElementById('passwordError'), passwordErrors.join(', '));
+                this.parentElement.classList.add('error');
+            } else {
+                clearError(document.getElementById('passwordError'));
+                this.parentElement.classList.remove('error');
+            }
+        } else {
+            clearError(document.getElementById('passwordError'));
+            this.parentElement.classList.remove('error');
+        }
+    });
+    
+    // Real-time validation for confirm password
     document.getElementById('confirmPassword').addEventListener('input', function() {
         const password = document.getElementById('password').value;
         const confirmPassword = this.value;
@@ -358,15 +413,11 @@ document.addEventListener('DOMContentLoaded', function() {
             this.parentElement.classList.remove('error');
         }
     });
-    
-    document.getElementById('password').addEventListener('input', function() {
-        if (this.value.length > 0 && this.value.length < 8) {
-            showError(document.getElementById('passwordError'), 'Password must be at least 8 characters');
-            this.parentElement.classList.add('error');
-        } else {
-            clearError(document.getElementById('passwordError'));
-            this.parentElement.classList.remove('error');
-        }
+
+    // Convert username to lowercase in real-time for better UX
+    document.getElementById('username').addEventListener('input', function() {
+        // Don't convert while typing to avoid cursor jumping
+        // The conversion will happen on form submission
     });
     
     // Helper functions
@@ -414,5 +465,4 @@ document.addEventListener('DOMContentLoaded', function() {
         errorMessage.innerHTML = `<i class="bx bx-error-circle"></i> ${message}`;
         form.appendChild(errorMessage);
     }
-
 });
