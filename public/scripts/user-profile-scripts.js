@@ -317,6 +317,7 @@ async function startConversationWithUser(userData) {
         const conversation_results = await conversation_response.json();
         if(conversation_results.exists)
         {   
+            let conversationId = conversation_results.id_conversation;
             console.log("hola");
             const chatUrl = `chat_space.html?conversation=${conversationId}&user=${encodeURIComponent(userData.username)}&userId=${encodeURIComponent(userData.username)}`;
             window.location.href = chatUrl;
