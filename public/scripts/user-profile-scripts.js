@@ -97,6 +97,9 @@ async function displayUserProfile(userData) {
         followBtn.style.display = 'none';
     }
 
+    // ADD THIS LINE - Setup the message button functionality
+    setupMessageButton(userData);
+    
     // Update user summary
     updateUserSummary(userData);
     
@@ -286,4 +289,106 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+function setupMessageButton(userData) {
+    const messageBtn = document.getElementById('message_user_btn');
+    
+    if (!messageBtn) return;
+    
+    // Hide message button if user is viewing their own profile
+    if (sessionStorage.currentUser === userData.username) {
+        messageBtn.style.display = 'none';
+        return;
+    }
+    
+    messageBtn.addEventListener('click', async function() {
+        await startConversationWithUser(userData);
+    });
+}
+
+async function startConversationWithUser(userData) {
+    try {
+        // Get current user from session storage
+        const currentUser = sessionStorage.getItem('currentUser');
+        
+        if (!currentUser) {
+            alert('Please log in to send messages');
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        // Prevent messaging yourself
+        if (currentUser === userData.username) {
+            alert('You cannot message yourself');
+            return;
+        }
+        
+        console.log(`Starting conversation between ${currentUser} and ${userData.username}`);
+        
+        // Show loading state
+        const messageBtn = document.getElementById('message_user_btn');
+        const originalText = messageBtn.textContent;
+        messageBtn.textContent = 'Starting conversation...';
+        messageBtn.disabled = true;
+        
+        // Start conversation using the function from general-scripts.js
+        const conversationId = await startNewConversation(userData.username, userData.username);
+        
+        if (conversationId) {
+            console.log('Conversation created with ID:', conversationId);
+            
+            // Redirect to chat space
+            const chatUrl = `../chat_space.html?conversation=${conversationId}&user=${encodeURIComponent(userData.username)}&userId=${encodeURIComponent(userData.username)}`;
+            window.location.href = chatUrl;
+            
+        } else {
+            // Check if conversation already exists
+            const existingConversation = await findExistingConversation(currentUser, userData.username);
+            
+            if (existingConversation) {
+                console.log('Existing conversation found:', existingConversation);
+                // Redirect to existing conversation
+                const chatUrl = `../chat_space.html?conversation=${existingConversation}&user=${encodeURIComponent(userData.username)}&userId=${encodeURIComponent(userData.username)}`;
+                window.location.href = chatUrl;
+            } else {
+                alert('Failed to start conversation. Please try again.');
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error starting conversation:', error);
+        alert('Error starting conversation: ' + error.message);
+    } finally {
+        // Reset button state
+        const messageBtn = document.getElementById('message_user_btn');
+        if (messageBtn) {
+            messageBtn.textContent = 'Message';
+            messageBtn.disabled = false;
+        }
+    }
+}
+
+async function findExistingConversation(currentUser, otherUser) {
+    try {
+        const response = await fetch(`/api/get_user_conversations?id_user=${currentUser}`);
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch conversations');
+        }
+        
+        const conversations = await response.json();
+        
+        // Find conversation with the other user
+        const existingConversation = conversations.find(conv => 
+            (conv.id_user_one === currentUser && conv.id_user_two === otherUser) ||
+            (conv.id_user_one === otherUser && conv.id_user_two === currentUser)
+        );
+        
+        return existingConversation ? existingConversation.id_conversation : null;
+        
+    } catch (error) {
+        console.error('Error finding existing conversation:', error);
+        return null;
+    }
 }
