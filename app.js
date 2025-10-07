@@ -33,9 +33,10 @@ import { init_cassandra,
     cloneDatasetById,
     getApprovedDatasets,
     getPendingDatasets,
-    getDatasetsByAuthor} from './Databases/Mongodb/mongodb.js';
-  import mongoose from 'mongoose';
-  import { GridFSBucket } from 'mongodb';
+    getDatasetsByAuthor,
+    getDatasetsByDescription} from './Databases/Mongodb/mongodb.js';
+    import mongoose from 'mongoose';
+    import { GridFSBucket } from 'mongodb';
 
   /*Neo4j */
   import { createUserNode, followUser, get_followers_by_id, get_who_I_follow, 
@@ -204,6 +205,30 @@ app.get('/api/datasets/by-name', async (req, res) => {
     const skip            = req.query.skip  ? Number(req.query.skip)  : 0;
 
     const results = await getDatasetsByName(name, {
+      exact,
+      caseInsensitive,
+      limit,
+      skip
+    });
+
+    res.json(results);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+//Buscar datasets por descripción
+app.get('/api/datasets/by-description', async (req, res) => {
+  try {
+    const { description } = req.query;
+    if (!description) return res.status(400).json({ error: "Falta 'description' en query" });
+
+    const exact           = req.query.exact === 'true';
+    const caseInsensitive = req.query.caseInsensitive !== 'false';
+    const limit           = req.query.limit ? Number(req.query.limit) : 20;
+    const skip            = req.query.skip  ? Number(req.query.skip)  : 0;
+
+    const results = await getDatasetsByDescription(description, {
       exact,
       caseInsensitive,
       limit,
