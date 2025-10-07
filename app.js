@@ -34,7 +34,7 @@ import { init_cassandra,
     getApprovedDatasets,
     getPendingDatasets,
     getDatasetsByAuthor,
-    getDatasetsByDescription.
+    getDatasetsByDescription,
     getDeletedDatasets} from './Databases/Mongodb/mongodb.js';
     import mongoose from 'mongoose';
     import { GridFSBucket } from 'mongodb';
