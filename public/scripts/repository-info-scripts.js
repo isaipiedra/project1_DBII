@@ -474,6 +474,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (sessionStorage.isAdmin === 'true' && was_deleted) {
                     delete_btn.style = 'display: none';
+                    approve_btn.style = 'display: none';
                 }
 
                 try {
