@@ -784,6 +784,8 @@ copy_option.addEventListener('click', async () => {
                             try {
                                 let newName = new_name_input.value.trim();
 
+                                clone_btn.innerHTML = 'Cloning...';
+
                                 const clone_response = await fetch(`/api/datasets/${dataset.id}/clone`, {
                                     method: 'POST',
                                     headers: {

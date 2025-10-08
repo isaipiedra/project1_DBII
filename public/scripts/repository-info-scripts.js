@@ -452,6 +452,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await response.json();
 
             if(response.ok) {
+                let was_deleted = false; 
+
+                if (result.status === 'Aprobado') {
+                    repository_status.innerHTML = 'Status: Approved'
+                } else if (result.status === 'Pendiente') {
+                    repository_status.innerHTML = 'Status: Pending'
+                } else if (result.status === 'Eliminado') {
+                    was_deleted = true;
+                    repository_status.innerHTML = 'Status: Deleted'
+                }
+
                 if (sessionStorage.isAdmin === 'true') {
                     approve_btn.style = 'display: block';
                 }
@@ -461,14 +472,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     see_downloads.style = 'display: block';
                 }
 
-                repository_image.style.backgroundImage = `url(${asUrl(result.foto_descripcion.file_id)})`;
+                if (sessionStorage.isAdmin === 'true' && was_deleted) {
+                    delete_btn.style = 'display: none';
+                }
 
-                if (result.status === 'Aprobado') {
-                    repository_status.innerHTML = 'Status: Approved'
-                } else if (result.status === 'Pendiente') {
-                    repository_status.innerHTML = 'Status: Pending'
-                } else if (result.status === 'Eliminado') {
-                    repository_status.innerHTML = 'Status: Deleted'
+                try {
+                    repository_image.style.backgroundImage = `url(${asUrl(result.foto_descripcion.file_id)})`;
+                } catch(err) {
+                    
                 }
 
                 repository_name.innerHTML = result.name;
